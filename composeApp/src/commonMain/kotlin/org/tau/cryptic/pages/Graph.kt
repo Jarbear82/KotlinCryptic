@@ -100,7 +100,7 @@ fun Graph(
 
     // State for the resizable panel and its visibility
     var isInfoPanelVisible by remember { mutableStateOf(true) }
-    var panelWeight by remember { mutableStateOf(0.4f) } // Start with a 40% width for the info panel
+    var panelWeight by remember { mutableFloatStateOf(0.4f) }
 
     Box(
         modifier = Modifier

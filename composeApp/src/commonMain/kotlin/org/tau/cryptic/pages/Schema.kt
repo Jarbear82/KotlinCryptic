@@ -13,9 +13,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import java.util.UUID
+
+// Local Imports
 import org.tau.cryptic.components.DeletableSelectableListView
 import org.tau.cryptic.components.Identifiable
-import java.util.UUID
 
 //region Data Models
 /**
