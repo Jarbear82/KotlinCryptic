@@ -590,7 +590,7 @@ private fun SchemaDropdown(
     }
 }
 
-@OptIn(ExperimentalMaterial3ai::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun NodeDropdown(
     label: String,

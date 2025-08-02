@@ -94,13 +94,13 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
 
     override fun addNodeSchema(schema: NodeSchema) {
         _selectedNoteGraph.update {
-            it?.copy(nodeSchemas = it.nodeSchemas + schema)
+            it?.copy(nodeSchemas = (it.nodeSchemas + schema).toMutableList())
         }
     }
 
     override fun removeNodeSchema(schema: NodeSchema) {
         _selectedNoteGraph.update {
-            it?.copy(nodeSchemas = it.nodeSchemas - schema)
+            it?.copy(nodeSchemas = (it.nodeSchemas - schema).toMutableList())
         }
     }
 
@@ -121,13 +121,13 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
 
     override fun addEdgeSchema(schema: EdgeSchema) {
         _selectedNoteGraph.update {
-            it?.copy(edgeSchemas = it.edgeSchemas + schema)
+            it?.copy(edgeSchemas = (it.edgeSchemas + schema).toMutableList())
         }
     }
 
     override fun removeEdgeSchema(schema: EdgeSchema) {
         _selectedNoteGraph.update {
-            it?.copy(edgeSchemas = it.edgeSchemas - schema)
+            it?.copy(edgeSchemas = (it.edgeSchemas - schema).toMutableList())
         }
     }
 
@@ -148,13 +148,13 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
 
     override fun addNode(node: GraphNode) {
         _selectedNoteGraph.update {
-            it?.copy(nodes = it.nodes + node)
+            it?.copy(nodes = (it.nodes + node).toMutableList())
         }
     }
 
     override fun addEdge(edge: GraphEdge) {
         _selectedNoteGraph.update {
-            it?.copy(edges = it.edges + edge)
+            it?.copy(edges = (it.edges + edge).toMutableList())
         }
     }
 
