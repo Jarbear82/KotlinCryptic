@@ -30,4 +30,6 @@ interface GraphRepository {
     fun addEdge(edge: GraphEdge)
     fun updateNode(updatedNode: GraphNode)
     fun updateEdge(updatedEdge: GraphEdge)
+    fun removeNode(node: GraphNode)
+    fun removeEdge(edge: GraphEdge)
 }

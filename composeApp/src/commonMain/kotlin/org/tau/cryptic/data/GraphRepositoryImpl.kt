@@ -160,4 +160,16 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
             }
         }
     }
+
+    override fun removeNode(node: GraphNode) {
+        _selectedNoteGraph.update {
+            it?.copy(nodes = (it.nodes - node).toMutableList())
+        }
+    }
+
+    override fun removeEdge(edge: GraphEdge) {
+        _selectedNoteGraph.update {
+            it?.copy(edges = (it.edges - edge).toMutableList())
+        }
+    }
 }
