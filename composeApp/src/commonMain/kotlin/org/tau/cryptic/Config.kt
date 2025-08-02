@@ -22,6 +22,8 @@ import org.tau.cryptic.pages.defaultValue
  */
 object Config {
 
+    private val kuzuDBService = KuzuDBService()
+
     //region Theme Configuration
     enum class AppTheme {
         LIGHT,
@@ -85,6 +87,7 @@ object Config {
     var selectedNoteGraph by mutableStateOf<NoteGraph?>(null)
 
     init {
+        kuzuDBService.initialize()
         // Initialize with a default graph for demonstration
         val defaultGraph = NoteGraph(name = "My First Graph").apply {
             val userSchema = NodeSchema(
