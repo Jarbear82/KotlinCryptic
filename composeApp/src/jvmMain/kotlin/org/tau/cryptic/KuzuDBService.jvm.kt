@@ -1,7 +1,7 @@
 package org.tau.cryptic
 
-import com.kuzudb.KuzuDatabase
-import com.kuzudb.KuzuConnection
+import com.kuzudb.Database as KuzuDatabase
+import com.kuzudb.Connection as KuzuConnection
 import java.nio.file.Files
 import java.nio.file.Paths
 
@@ -16,7 +16,8 @@ actual class KuzuDBService {
             if (!Files.exists(dbDir)) {
                 Files.createDirectories(dbDir)
             }
-            db = KuzuDatabase(dbPath, 1024 * 1024 * 1024) // 1GB buffer pool size
+            // Corrected line: Using the full constructor with default values for the other parameters.
+            db = KuzuDatabase(dbPath, 1024 * 1024 * 1024L, true, false, 0L, true, -1L)
             conn = KuzuConnection(db)
             println("KuzuDB initialized successfully.")
         } catch (e: Exception) {
