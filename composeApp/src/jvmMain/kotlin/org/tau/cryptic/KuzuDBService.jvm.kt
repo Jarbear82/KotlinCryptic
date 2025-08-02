@@ -11,8 +11,8 @@ actual class KuzuDBService {
 
     actual fun initialize() {
         try {
-            val dbPath = "kuzudb"
-            val dbDir = Paths.get(dbPath)
+            val dbPath = "kuzudb/database" // Changed to a file path
+            val dbDir = Paths.get("kuzudb")
             if (!Files.exists(dbDir)) {
                 Files.createDirectories(dbDir)
             }
