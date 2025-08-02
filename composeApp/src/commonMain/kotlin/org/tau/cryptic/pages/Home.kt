@@ -8,13 +8,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.tau.cryptic.Config
-// import org.tau.cryptic.NoteGraph
 import org.tau.cryptic.components.DeletableSelectableListView
+import org.tau.cryptic.ui.viewmodel.HomeViewModel
 
 @Composable
-fun Home() {
+fun Home(viewModel: HomeViewModel) {
     var newItemText by remember { mutableStateOf("") }
+    val noteGraphs by viewModel.noteGraphs.collectAsState()
+    val selectedNoteGraph by viewModel.selectedNoteGraph.collectAsState()
 
     Column(
         modifier = Modifier
@@ -41,7 +42,7 @@ fun Home() {
             Button(
                 onClick = {
                     if (newItemText.isNotBlank()) {
-                        Config.addNoteGraph(newItemText)
+                        viewModel.addNoteGraph(newItemText)
                         newItemText = ""
                     }
                 },
@@ -54,10 +55,10 @@ fun Home() {
         Spacer(modifier = Modifier.height(16.dp))
 
         DeletableSelectableListView(
-            items = Config.noteGraphs,
-            selectedItem = Config.selectedNoteGraph,
-            onItemClick = { Config.selectedNoteGraph = it },
-            onDeleteItemClick = { Config.removeNoteGraph(it) },
+            items = noteGraphs,
+            selectedItem = selectedNoteGraph,
+            onItemClick = { viewModel.selectNoteGraph(it) },
+            onDeleteItemClick = { viewModel.removeNoteGraph(it) },
             modifier = Modifier.fillMaxSize()
         ) { item ->
             Text(

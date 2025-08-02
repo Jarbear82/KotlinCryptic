@@ -10,9 +10,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import org.tau.cryptic.Config
 import org.tau.cryptic.pages.*
-import kotlin.random.Random
+import org.tau.cryptic.data.AppContainer
+import org.tau.cryptic.ui.viewmodel.GraphViewModel
+import org.tau.cryptic.ui.viewmodel.HomeViewModel
+import org.tau.cryptic.ui.viewmodel.SchemaViewModel
 
 private data class NavItem(val label: String, val icon: ImageVector)
 
@@ -33,10 +35,16 @@ private val configsNavItems = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NavDrawer() {
+fun NavDrawer(appContainer: AppContainer) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     var selectedItem by remember { mutableStateOf("Home") }
+
+    val homeViewModel = remember { HomeViewModel(appContainer.graphRepository) }
+    val graphViewModel = remember { GraphViewModel(appContainer.graphRepository) }
+    val schemaViewModel = remember { SchemaViewModel(appContainer.graphRepository) }
+    val selectedNoteGraph by homeViewModel.selectedNoteGraph.collectAsState()
+
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -99,7 +107,7 @@ fun NavDrawer() {
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text(if (selectedItem == "Home") "Cryptic" else "${Config.selectedNoteGraph?.name ?: ""} - $selectedItem") },
+                    title = { Text(if (selectedItem == "Home") "Cryptic" else "${selectedNoteGraph?.name ?: ""} - $selectedItem") },
                     navigationIcon = {
                         IconButton(onClick = {
                             scope.launch {
@@ -113,34 +121,24 @@ fun NavDrawer() {
             }
         ) { paddingValues ->
             Box(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
-                val activeGraph = Config.selectedNoteGraph
-
                 when (selectedItem) {
-                    "Home" -> Home()
+                    "Home" -> Home(homeViewModel)
                     "Graph" -> {
-                        if (activeGraph != null) {
+                        if (selectedNoteGraph != null) {
                             Graph(
-                                graph = activeGraph,
-                                onUpdateNode = { Config.updateNode(it) },
-                                onUpdateEdge = { Config.updateEdge(it) },
-                                onCreateNode = { Config.addNode(it) },
-                                onCreateEdge = { Config.addEdge(it) }
+                                graphViewModel = graphViewModel,
+                                graph = selectedNoteGraph!!
                             )
                         } else {
                             NoGraphSelected()
                         }
                     }
                     "Schema" -> {
-                        if (activeGraph != null) {
+                        if (selectedNoteGraph != null) {
                             Schema(
-                                nodeSchemas = activeGraph.nodeSchemas,
-                                edgeSchemas = activeGraph.edgeSchemas,
-                                onNodeSchemaUpdate = { Config.updateNodeSchema(it) },
-                                onNodeSchemaAdd = { name, props -> Config.addNodeSchema(NodeSchema(Random.nextInt(), name, props)) },
-                                onNodeSchemaRemove = { Config.removeNodeSchema(it) },
-                                onEdgeSchemaUpdate = { Config.updateEdgeSchema(it) },
-                                onEdgeSchemaAdd = { name, props -> Config.addEdgeSchema(EdgeSchema(Random.nextInt(), name, props)) },
-                                onEdgeSchemaRemove = { Config.removeEdgeSchema(it) }
+                                schemaViewModel = schemaViewModel,
+                                nodeSchemas = selectedNoteGraph!!.nodeSchemas,
+                                edgeSchemas = selectedNoteGraph!!.edgeSchemas,
                             )
                         } else {
                             NoGraphSelected()

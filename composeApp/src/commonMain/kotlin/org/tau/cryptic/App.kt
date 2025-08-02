@@ -5,13 +5,18 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.tau.cryptic.components.NavDrawer
+import org.tau.cryptic.data.AppContainer
+import org.tau.cryptic.data.DefaultAppContainer
 
 @Composable
 @Preview
-fun App() {
-    val colors = if (Config.theme == Config.AppTheme.DARK) {
+fun App(appContainer: AppContainer = DefaultAppContainer()) {
+    val theme by Config.themeState.collectAsState()
+    val colors = if (theme == Config.AppTheme.DARK) {
         darkColorScheme(
             primary = Config.colors.primary,
             secondary = Config.colors.secondary,
@@ -35,7 +40,7 @@ fun App() {
 
     MaterialTheme(colorScheme = colors) {
         Surface {
-            NavDrawer()
+            NavDrawer(appContainer)
         }
     }
 }

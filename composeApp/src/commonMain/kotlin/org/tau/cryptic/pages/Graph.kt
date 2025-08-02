@@ -27,6 +27,7 @@ import java.util.UUID
 // Local Imports
 import org.tau.cryptic.NoteGraph
 import org.tau.cryptic.components.Identifiable
+import org.tau.cryptic.ui.viewmodel.GraphViewModel
 
 
 //region Data Models
@@ -81,11 +82,8 @@ data class GraphEdge(
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun Graph(
-    graph: NoteGraph,
-    onUpdateNode: (GraphNode) -> Unit,
-    onUpdateEdge: (GraphEdge) -> Unit,
-    onCreateNode: (GraphNode) -> Unit,
-    onCreateEdge: (GraphEdge) -> Unit
+    graphViewModel: GraphViewModel,
+    graph: NoteGraph
 ) {
     // State for selections
     var primarySelected by remember { mutableStateOf<GraphElement?>(null) }
@@ -183,8 +181,8 @@ fun Graph(
                                 schemas = graph.nodeSchemas + graph.edgeSchemas,
                                 onUpdate = { updatedElement ->
                                     when (updatedElement) {
-                                        is GraphNode -> onUpdateNode(updatedElement)
-                                        is GraphEdge -> onUpdateEdge(updatedElement)
+                                        is GraphNode -> graphViewModel.onUpdateNode(updatedElement)
+                                        is GraphEdge -> graphViewModel.onUpdateEdge(updatedElement)
                                     }
                                     primarySelected = updatedElement
                                 }
@@ -194,12 +192,12 @@ fun Graph(
                                 edgeSchemas = graph.edgeSchemas,
                                 nodes = graph.nodes,
                                 onCreateNode = {
-                                    onCreateNode(it)
+                                    graphViewModel.onCreateNode(it)
                                     primarySelected = it
                                     selectedTabIndex = 1
                                 },
                                 onCreateEdge = {
-                                    onCreateEdge(it)
+                                    graphViewModel.onCreateEdge(it)
                                     primarySelected = it
                                     selectedTabIndex = 1
                                 }
@@ -592,7 +590,7 @@ private fun SchemaDropdown(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3ai::class)
 @Composable
 private fun NodeDropdown(
     label: String,

@@ -18,6 +18,7 @@ import java.util.UUID
 // Local Imports
 import org.tau.cryptic.components.DeletableSelectableListView
 import org.tau.cryptic.components.Identifiable
+import org.tau.cryptic.ui.viewmodel.SchemaViewModel
 
 //region Data Models
 /**
@@ -92,14 +93,9 @@ data class EdgeSchema(
 
 @Composable
 fun Schema(
+    schemaViewModel: SchemaViewModel,
     nodeSchemas: List<NodeSchema>,
-    edgeSchemas: List<EdgeSchema>,
-    onNodeSchemaUpdate: (NodeSchema) -> Unit,
-    onNodeSchemaAdd: (String, List<PropertyDefinition>) -> Unit,
-    onNodeSchemaRemove: (NodeSchema) -> Unit,
-    onEdgeSchemaUpdate: (EdgeSchema) -> Unit,
-    onEdgeSchemaAdd: (String, List<PropertyDefinition>) -> Unit,
-    onEdgeSchemaRemove: (EdgeSchema) -> Unit
+    edgeSchemas: List<EdgeSchema>
 ) {
     // State for the currently selected schema for editing
     var selectedSchema by remember { mutableStateOf<SchemaDefinition?>(null) }
@@ -111,8 +107,8 @@ fun Schema(
     // Update handler to reflect edits from the detail view back to the list
     val onSchemaUpdated: (SchemaDefinition) -> Unit = { updatedSchema ->
         when (updatedSchema) {
-            is NodeSchema -> onNodeSchemaUpdate(updatedSchema)
-            is EdgeSchema -> onEdgeSchemaUpdate(updatedSchema)
+            is NodeSchema -> schemaViewModel.onNodeSchemaUpdate(updatedSchema)
+            is EdgeSchema -> schemaViewModel.onEdgeSchemaUpdate(updatedSchema)
         }
         selectedSchema = updatedSchema // Keep the updated item selected
     }
@@ -156,12 +152,12 @@ fun Schema(
                     onItemClick = { selectedSchema = it },
                     onDeleteItemClick = {
                         if (selectedSchema?.id == it.id) selectedSchema = null
-                        onNodeSchemaRemove(it)
+                        schemaViewModel.onNodeSchemaRemove(it)
                     },
                     onCreate = { typeName, properties ->
                         val finalProperties = mutableListOf(PropertyDefinition(key = "name", type = PropertyType.TEXT))
                         finalProperties.addAll(properties)
-                        onNodeSchemaAdd(typeName, finalProperties)
+                        schemaViewModel.onNodeSchemaAdd(typeName, finalProperties)
                     }
                 )
                 1 -> EdgeSchemaContent(
@@ -170,9 +166,9 @@ fun Schema(
                     onItemClick = { selectedSchema = it },
                     onDeleteItemClick = {
                         if (selectedSchema?.id == it.id) selectedSchema = null
-                        onEdgeSchemaRemove(it)
+                        schemaViewModel.onEdgeSchemaRemove(it)
                     },
-                    onCreate = onEdgeSchemaAdd
+                    onCreate = schemaViewModel::onEdgeSchemaAdd
                 )
             }
         }
