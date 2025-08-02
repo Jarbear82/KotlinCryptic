@@ -41,7 +41,7 @@ fun NavDrawer(appContainer: AppContainer) {
     var selectedItem by remember { mutableStateOf("Home") }
 
     val homeViewModel = remember { HomeViewModel(appContainer.graphRepository) }
-    val graphViewModel = remember { GraphViewModel(appContainer.graphRepository) }
+    val graphViewModel = remember { GraphViewModel(appContainer.graphRepository, appContainer.layoutManager) }
     val schemaViewModel = remember { SchemaViewModel(appContainer.graphRepository) }
     val selectedNoteGraph by homeViewModel.selectedNoteGraph.collectAsState()
 

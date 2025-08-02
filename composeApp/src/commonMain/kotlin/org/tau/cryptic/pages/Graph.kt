@@ -1,9 +1,11 @@
 package org.tau.cryptic.pages
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,6 +19,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
@@ -100,6 +105,9 @@ fun Graph(
     var isInfoPanelVisible by remember { mutableStateOf(true) }
     var panelWeight by remember { mutableFloatStateOf(0.4f) }
 
+    val visualState by graphViewModel.graphVisualState.collectAsState()
+
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -120,10 +128,33 @@ fun Graph(
                     modifier = Modifier
                         .weight(1f - if (isInfoPanelVisible) panelWeight else 0f) // Takes remaining space
                         .fillMaxHeight()
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                    contentAlignment = Alignment.Center
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .pointerInput(Unit) {
+                            detectTransformGestures { _, pan, zoom, _ ->
+                                // For this example, we'll just print the gestures
+                                println("Pan: $pan, Zoom: $zoom")
+                            }
+                        },
                 ) {
-                    Text("Graph View Placeholder", style = MaterialTheme.typography.titleLarge)
+                    Canvas(modifier = Modifier.fillMaxSize()) {
+                        visualState.edges.forEach { (edge, sourcePos, targetPos) ->
+                            drawLine(
+                                color = Color.Gray,
+                                start = sourcePos,
+                                end = targetPos,
+                                strokeWidth = 2f
+                            )
+                        }
+
+                        visualState.nodes.forEach { (node, pos) ->
+                            drawCircle(
+                                color = if (visualState.pinnedNodes.contains(node.id)) Color.Red else Color.Blue,
+                                radius = 20f,
+                                center = pos,
+                                style = Stroke(width = 4f)
+                            )
+                        }
+                    }
                 }
 
                 // Show divider and panel only if visible
