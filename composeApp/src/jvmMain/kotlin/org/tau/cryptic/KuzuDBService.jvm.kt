@@ -1,7 +1,7 @@
 package org.tau.cryptic
 
-import com.kuzudb.main.KuzuDatabase
-import com.kuzudb.main.KuzuConnection
+import com.kuzudb.KuzuDatabase
+import com.kuzudb.KuzuConnection
 import java.nio.file.Files
 import java.nio.file.Paths
 
