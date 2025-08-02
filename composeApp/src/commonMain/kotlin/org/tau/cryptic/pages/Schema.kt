@@ -34,13 +34,13 @@ enum class PropertyType {
 val PropertyType.defaultValue: Any?
     get() = when (this) {
         PropertyType.TEXT, PropertyType.LONG_TEXT, PropertyType.IMAGE -> ""
-        PropertyType.NUMBER -> "0"
+        PropertyType.NUMBER -> 0L // Defaulting to Long for INT64
         PropertyType.BOOLEAN -> false
-        PropertyType.DATE -> "2023-01-01"
+        PropertyType.DATE -> "2023-01-01" // KuzuDB expects date as string
         PropertyType.TIMESTAMP -> System.currentTimeMillis()
-        PropertyType.LIST -> emptyList<String>()
-        PropertyType.MAP -> emptyMap<String, String>()
-        PropertyType.VECTOR -> "[0.0, 0.0, 0.0]"
+        PropertyType.LIST -> "[]"
+        PropertyType.MAP -> "{}"
+        PropertyType.VECTOR -> "[]"
         PropertyType.STRUCT -> "{}"
     }
 
@@ -157,18 +157,32 @@ fun Schema(
                     onCreate = { typeName, properties ->
                         val finalProperties = mutableListOf(PropertyDefinition(key = "name", type = PropertyType.TEXT))
                         finalProperties.addAll(properties)
-                        schemaViewModel.onNodeSchemaAdd(typeName, finalProperties)
+                        // Create a new NodeSchema with a unique ID
+                        val newSchema = NodeSchema(
+                            id = (nodeSchemas.maxOfOrNull { s -> s.id } ?: 0) + 1,
+                            typeName = typeName,
+                            properties = finalProperties
+                        )
+                        schemaViewModel.onNodeSchemaAdd(newSchema)
                     }
                 )
                 1 -> EdgeSchemaContent(
                     items = edgeSchemas,
+                    allNodeSchemas = nodeSchemas,
                     selectedItem = selectedSchema,
                     onItemClick = { selectedSchema = it },
                     onDeleteItemClick = {
                         if (selectedSchema?.id == it.id) selectedSchema = null
                         schemaViewModel.onEdgeSchemaRemove(it)
                     },
-                    onCreate = schemaViewModel::onEdgeSchemaAdd
+                    onCreate = { typeName, properties, from, to ->
+                        val newSchema = EdgeSchema(
+                            id = (edgeSchemas.maxOfOrNull { s -> s.id } ?: 0) + 1,
+                            typeName = typeName,
+                            properties = properties
+                        )
+                        schemaViewModel.onEdgeSchemaAdd(newSchema, from, to)
+                    }
                 )
             }
         }
@@ -213,10 +227,11 @@ private fun NodeSchemaContent(
 @Composable
 private fun EdgeSchemaContent(
     items: List<EdgeSchema>,
+    allNodeSchemas: List<NodeSchema>,
     selectedItem: SchemaDefinition?,
     onItemClick: (EdgeSchema) -> Unit,
     onDeleteItemClick: (EdgeSchema) -> Unit,
-    onCreate: (String, List<PropertyDefinition>) -> Unit
+    onCreate: (String, List<PropertyDefinition>, String, String) -> Unit
 ) {
     Column(Modifier.fillMaxSize()) {
         Text(
@@ -236,8 +251,9 @@ private fun EdgeSchemaContent(
             }
         }
         HorizontalDivider()
-        CreateSchemaForm(
+        CreateEdgeSchemaForm(
             title = "Create New Edge Schema",
+            allNodeSchemas = allNodeSchemas,
             onSchemaCreate = onCreate,
             // Automatic formatting for edge type names
             formatTypeName = { it.uppercase().replace(' ', '_') }
@@ -325,40 +341,46 @@ fun SchemaDetailView(schema: SchemaDefinition?, onUpdate: (SchemaDefinition) -> 
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 // Property Key
-                if (prop.type == PropertyType.BOOLEAN) {
-                    Text(prop.key, Modifier.weight(1f))
-                } else {
-                    OutlinedTextField(
-                        value = prop.key,
-                        onValueChange = { newKey ->
-                            prop.key = newKey
+                OutlinedTextField(
+                    value = prop.key,
+                    onValueChange = { newKey ->
+                        // Create a new property and update the list
+                        val index = editableSchema.properties.indexOf(prop)
+                        if (index != -1) {
+                            val updatedProperties = editableSchema.properties.toMutableList()
+                            updatedProperties[index] = prop.copy(key = newKey)
+                            editableSchema = when (val s = editableSchema) {
+                                is NodeSchema -> s.copy(properties = updatedProperties)
+                                is EdgeSchema -> s.copy(properties = updatedProperties)
+                            }
                             triggerUpdate()
-                        },
-                        label = { Text("Key") },
-                        modifier = Modifier.weight(1f),
-                        readOnly = isNameProperty,
-                        enabled = !isNameProperty
-                    )
-                }
+                        }
+                    },
+                    label = { Text("Key") },
+                    modifier = Modifier.weight(1f),
+                    readOnly = isNameProperty,
+                    enabled = !isNameProperty
+                )
 
                 // Property Type
-                if (prop.type == PropertyType.BOOLEAN) {
-                    Switch(
-                        checked = true, // This switch is just for show in the schema definition
-                        onCheckedChange = null,
-                        enabled = false // It's just a visual indicator of the type
-                    )
-                } else {
-                    PropertyTypeDropdown(
-                        selectedType = prop.type,
-                        onTypeSelected = { newType ->
-                            prop.type = newType
+                PropertyTypeDropdown(
+                    selectedType = prop.type,
+                    onTypeSelected = { newType ->
+                        val index = editableSchema.properties.indexOf(prop)
+                        if (index != -1) {
+                            val updatedProperties = editableSchema.properties.toMutableList()
+                            updatedProperties[index] = prop.copy(type = newType)
+                            editableSchema = when (val s = editableSchema) {
+                                is NodeSchema -> s.copy(properties = updatedProperties)
+                                is EdgeSchema -> s.copy(properties = updatedProperties)
+                            }
                             triggerUpdate()
-                        },
-                        modifier = Modifier.weight(1f),
-                        enabled = !isNameProperty
-                    )
-                }
+                        }
+                    },
+                    modifier = Modifier.weight(1f),
+                    enabled = !isNameProperty
+                )
+
 
                 // Delete Button
                 IconButton(
@@ -476,7 +498,6 @@ fun PropertyTypeDropdown(
 //endregion
 
 //region Creation Form
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CreateSchemaForm(
     title: String,
@@ -552,6 +573,138 @@ private fun CreateSchemaForm(
             modifier = Modifier.align(Alignment.End)
         ) {
             Text("Create")
+        }
+    }
+}
+
+
+@Composable
+private fun CreateEdgeSchemaForm(
+    title: String,
+    allNodeSchemas: List<NodeSchema>,
+    onSchemaCreate: (String, List<PropertyDefinition>, String, String) -> Unit,
+    formatTypeName: (String) -> String
+) {
+    var typeName by remember { mutableStateOf("") }
+    val properties = remember { mutableStateListOf<PropertyDefinition>() }
+    var newPropKey by remember { mutableStateOf("") }
+    var newPropType by remember { mutableStateOf(PropertyType.TEXT) }
+    var fromNodeSchema by remember { mutableStateOf<NodeSchema?>(null) }
+    var toNodeSchema by remember { mutableStateOf<NodeSchema?>(null) }
+
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(title, style = MaterialTheme.typography.titleLarge)
+
+        OutlinedTextField(
+            value = typeName,
+            onValueChange = { typeName = formatTypeName(it) },
+            label = { Text("Schema Type Name") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        // Dropdowns for From and To
+        NodeSchemaDropdown("From Node", allNodeSchemas, fromNodeSchema) { fromNodeSchema = it }
+        NodeSchemaDropdown("To Node", allNodeSchemas, toNodeSchema) { toNodeSchema = it }
+
+
+        // Properties being added
+        properties.forEach { prop ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("${prop.key}: ${prop.type.name}", modifier = Modifier.weight(1f))
+                IconButton(onClick = { properties.remove(prop) }) {
+                    Icon(Icons.Default.RemoveCircleOutline, "Remove Property")
+                }
+            }
+        }
+
+        // Form to add a new property
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedTextField(
+                value = newPropKey,
+                onValueChange = { newPropKey = it },
+                label = { Text("Property Key") },
+                modifier = Modifier.weight(1f)
+            )
+            PropertyTypeDropdown(
+                selectedType = newPropType,
+                onTypeSelected = { newPropType = it },
+                modifier = Modifier.weight(1f)
+            )
+            IconButton(
+                onClick = {
+                    if (newPropKey.isNotBlank()) {
+                        properties.add(PropertyDefinition(key = newPropKey, type = newPropType))
+                        newPropKey = "" // Reset for next entry
+                    }
+                },
+                enabled = newPropKey.isNotBlank()
+            ) {
+                Icon(Icons.Default.AddCircle, "Add Property")
+            }
+        }
+
+        Button(
+            onClick = {
+                if(fromNodeSchema != null && toNodeSchema != null) {
+                    onSchemaCreate(typeName, properties.toList(), fromNodeSchema!!.typeName, toNodeSchema!!.typeName)
+                    typeName = ""
+                    properties.clear()
+                    fromNodeSchema = null
+                    toNodeSchema = null
+                }
+            },
+            enabled = typeName.isNotBlank() && fromNodeSchema != null && toNodeSchema != null,
+            modifier = Modifier.align(Alignment.End)
+        ) {
+            Text("Create")
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun NodeSchemaDropdown(
+    label: String,
+    schemas: List<NodeSchema>,
+    selectedSchema: NodeSchema?,
+    onSchemaSelected: (NodeSchema) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded }
+    ) {
+        OutlinedTextField(
+            value = selectedSchema?.typeName ?: "",
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(label) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier.menuAnchor().fillMaxWidth()
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            schemas.forEach { schema ->
+                DropdownMenuItem(
+                    text = { Text(schema.typeName) },
+                    onClick = {
+                        onSchemaSelected(schema)
+                        expanded = false
+                    }
+                )
+            }
         }
     }
 }
