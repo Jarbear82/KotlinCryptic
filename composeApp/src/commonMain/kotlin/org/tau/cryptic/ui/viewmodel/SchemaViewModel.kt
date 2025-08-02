@@ -9,7 +9,6 @@ import org.tau.cryptic.NoteGraph
 import org.tau.cryptic.data.GraphRepository
 import org.tau.cryptic.pages.EdgeSchema
 import org.tau.cryptic.pages.NodeSchema
-import org.tau.cryptic.pages.PropertyDefinition
 
 /**
  * A view model for the schema screen.
@@ -27,8 +26,8 @@ class SchemaViewModel(private val graphRepository: GraphRepository) : ViewModel(
         graphRepository.updateNodeSchema(schema)
     }
 
-    fun onNodeSchemaAdd(name: String, properties: List<PropertyDefinition>) {
-        graphRepository.addNodeSchema(NodeSchema(0, name, properties))
+    fun onNodeSchemaAdd(schema: NodeSchema) {
+        graphRepository.addNodeSchema(schema)
     }
 
     fun onNodeSchemaRemove(schema: NodeSchema) {
@@ -39,8 +38,8 @@ class SchemaViewModel(private val graphRepository: GraphRepository) : ViewModel(
         graphRepository.updateEdgeSchema(schema)
     }
 
-    fun onEdgeSchemaAdd(name: String, properties: List<PropertyDefinition>) {
-        graphRepository.addEdgeSchema(EdgeSchema(0, name, properties))
+    fun onEdgeSchemaAdd(schema: EdgeSchema, fromNodeTypeName: String, toNodeTypeName: String) {
+        graphRepository.addEdgeSchema(schema, fromNodeTypeName, toNodeTypeName)
     }
 
     fun onEdgeSchemaRemove(schema: EdgeSchema) {

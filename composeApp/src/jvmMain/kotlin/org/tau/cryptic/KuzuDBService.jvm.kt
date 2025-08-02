@@ -42,7 +42,7 @@ actual class KuzuDBService {
     /**
      * Creates a node table in the database from a NodeSchema.
      */
-    fun createNodeSchema(graphName: String, schema: NodeSchema) {
+    actual fun createNodeSchema(graphName: String, schema: NodeSchema) {
         val tableName = "${graphName}_${schema.typeName}"
         val properties = schema.properties.joinToString(", ") {
             "${it.key.replace(" ", "_")} ${mapPropertyType(it.type)}"
@@ -62,7 +62,7 @@ actual class KuzuDBService {
     /**
      * Creates a relationship table in the database from an EdgeSchema.
      */
-    fun createEdgeSchema(graphName: String, schema: EdgeSchema, fromTable: String, toTable: String) {
+    actual fun createEdgeSchema(graphName: String, schema: EdgeSchema, fromTable: String, toTable: String) {
         val tableName = "${graphName}_${schema.typeName}"
         val fromTableName = "${graphName}_$fromTable"
         val toTableName = "${graphName}_$toTable"
