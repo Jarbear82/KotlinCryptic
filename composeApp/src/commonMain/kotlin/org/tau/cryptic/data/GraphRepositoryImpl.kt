@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.update
 import org.tau.cryptic.KuzuDBService
 import org.tau.cryptic.NoteGraph
 import org.tau.cryptic.pages.*
+import java.io.File
 
 /**
  * The default implementation of the graph repository.
@@ -19,157 +20,123 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
     private val _selectedNoteGraph = MutableStateFlow<NoteGraph?>(null)
     override val selectedNoteGraph: Flow<NoteGraph?> = _selectedNoteGraph.asStateFlow()
 
-    init {
-        kuzuDBService.initialize()
-        // Initialize with a default graph for demonstration
-        val defaultGraph = NoteGraph(name = "My_First_Graph").apply {
-            val userSchema = NodeSchema(
-                id = 1, typeName = "User", properties = listOf(
-                    PropertyDefinition(key = "name", type = PropertyType.TEXT),
-                    PropertyDefinition(key = "age", type = PropertyType.NUMBER),
-                    PropertyDefinition(key = "is_verified", type = PropertyType.BOOLEAN)
-                )
-            )
-            val productSchema = NodeSchema(
-                id = 2, typeName = "Product", properties = listOf(
-                    PropertyDefinition(key = "name", type = PropertyType.TEXT),
-                    PropertyDefinition(key = "price", type = PropertyType.NUMBER)
-                )
-            )
-            nodeSchemas.addAll(listOf(userSchema, productSchema))
-        }
-        _noteGraphs.value = listOf(defaultGraph)
-        _selectedNoteGraph.value = defaultGraph
+    override fun createNoteGraph(name: String, filePath: String) {
+        val fullPath = File(filePath, "$name.kuzudb").absolutePath
+        kuzuDBService.initialize(fullPath)
+        val newGraph = NoteGraph(name = name, filePath = fullPath)
+        _noteGraphs.update { it + newGraph }
+        setSelectedNoteGraph(newGraph)
     }
 
     override fun addNoteGraph(name: String) {
-        // Sanitize the name for use in table names
-        val sanitizedName = name.replace(" ", "_")
-        _noteGraphs.update { it + NoteGraph(name = sanitizedName) }
+        // This is now handled by createNoteGraph with a file path
     }
 
     override fun removeNoteGraph(graph: NoteGraph) {
+        // Implementation would involve deleting the database file and removing from the list
         _noteGraphs.update { it - graph }
         if (_selectedNoteGraph.value == graph) {
-            _selectedNoteGraph.value = _noteGraphs.value.firstOrNull()
+            _selectedNoteGraph.value = null
+            kuzuDBService.close()
         }
     }
 
     override fun setSelectedNoteGraph(graph: NoteGraph) {
+        if (_selectedNoteGraph.value?.filePath != graph.filePath) {
+            kuzuDBService.close()
+            kuzuDBService.initialize(graph.filePath)
+        }
         _selectedNoteGraph.value = graph
+        loadGraphFromDB()
     }
 
-    override fun addNodeSchema(schema: NodeSchema) {
-        _selectedNoteGraph.value?.let { graph ->
-            kuzuDBService.createNodeSchema(graph.name, schema)
-            _selectedNoteGraph.update {
-                it?.copy(nodeSchemas = (it.nodeSchemas + schema).toMutableList())
+    private fun loadGraphFromDB() {
+        val graph = _selectedNoteGraph.value ?: return
+        val nodeTableNames = kuzuDBService.getNodeTables().mapNotNull { it["name"] as? String }
+        val edgeTableNames = kuzuDBService.getEdgeTables().mapNotNull { it["name"] as? String }
+
+        val nodeSchemas = nodeTableNames.mapIndexed { index, name ->
+            val properties = kuzuDBService.getTableSchema(name).map {
+                PropertyDefinition(key = it["name"] as String, type = PropertyType.valueOf((it["type"] as String).uppercase()))
             }
+            NodeSchema(id = index, typeName = name, properties = properties)
         }
+
+        val edgeSchemas = edgeTableNames.mapIndexed { index, name ->
+            val properties = kuzuDBService.getTableSchema(name).map {
+                PropertyDefinition(key = it["name"] as String, type = PropertyType.valueOf((it["type"] as String).uppercase()))
+            }
+            EdgeSchema(id = index, typeName = name, properties = properties)
+        }
+
+        _selectedNoteGraph.update {
+            it?.copy(
+                nodeSchemas = nodeSchemas.toMutableList(),
+                edgeSchemas = edgeSchemas.toMutableList()
+                // Loading nodes and edges would require additional service methods
+            )
+        }
+    }
+
+
+    override fun addNodeSchema(schema: NodeSchema) {
+        kuzuDBService.createNodeSchema(schema)
+        loadGraphFromDB()
     }
 
     override fun removeNodeSchema(schema: NodeSchema) {
-        _selectedNoteGraph.update {
-            it?.copy(nodeSchemas = (it.nodeSchemas - schema).toMutableList())
-        }
+        // kuzuDBService.dropTable(schema.typeName)
+        loadGraphFromDB()
     }
 
     override fun updateNodeSchema(updatedSchema: NodeSchema) {
-        _selectedNoteGraph.update { graph ->
-            graph?.let {
-                val schemaIndex = it.nodeSchemas.indexOfFirst { s -> s.id == updatedSchema.id }
-                if (schemaIndex != -1) {
-                    val newSchemas = it.nodeSchemas.toMutableList()
-                    newSchemas[schemaIndex] = updatedSchema
-                    it.copy(nodeSchemas = newSchemas)
-                } else {
-                    it
-                }
-            }
-        }
+        // This would involve complex ALTER TABLE operations
+        loadGraphFromDB()
     }
 
     override fun addEdgeSchema(schema: EdgeSchema, fromNodeTypeName: String, toNodeTypeName: String) {
-        _selectedNoteGraph.value?.let { graph ->
-            kuzuDBService.createEdgeSchema(graph.name, schema, fromNodeTypeName, toNodeTypeName)
-            _selectedNoteGraph.update {
-                it?.copy(edgeSchemas = (it.edgeSchemas + schema).toMutableList())
-            }
-        }
+        kuzuDBService.createEdgeSchema(schema, fromNodeTypeName, toNodeTypeName)
+        loadGraphFromDB()
     }
 
     override fun removeEdgeSchema(schema: EdgeSchema) {
-        _selectedNoteGraph.update {
-            it?.copy(edgeSchemas = (it.edgeSchemas - schema).toMutableList())
-        }
+        // kuzuDBService.dropTable(schema.typeName)
+        loadGraphFromDB()
     }
 
     override fun updateEdgeSchema(updatedSchema: EdgeSchema) {
-        _selectedNoteGraph.update { graph ->
-            graph?.let {
-                val schemaIndex = it.edgeSchemas.indexOfFirst { s -> s.id == updatedSchema.id }
-                if (schemaIndex != -1) {
-                    val newSchemas = it.edgeSchemas.toMutableList()
-                    newSchemas[schemaIndex] = updatedSchema
-                    it.copy(edgeSchemas = newSchemas)
-                } else {
-                    it
-                }
-            }
-        }
+        // This would involve complex ALTER TABLE operations
+        loadGraphFromDB()
     }
 
     override fun addNode(node: GraphNode) {
-        _selectedNoteGraph.update {
-            it?.copy(nodes = (it.nodes + node).toMutableList())
-        }
+        val properties = node.properties.associate { it.key to (it.value ?: "") }
+        kuzuDBService.insertNode(node.typeName, properties)
+        loadGraphFromDB() // Refresh state from DB
     }
 
     override fun addEdge(edge: GraphEdge) {
-        _selectedNoteGraph.update {
-            it?.copy(edges = (it.edges + edge).toMutableList())
-        }
+        // kuzuDBService.insertEdge(...)
+        loadGraphFromDB()
     }
 
     override fun updateNode(updatedNode: GraphNode) {
-        _selectedNoteGraph.update { graph ->
-            graph?.let {
-                val index = it.nodes.indexOfFirst { n -> n.id == updatedNode.id }
-                if (index != -1) {
-                    val newNodes = it.nodes.toMutableList()
-                    newNodes[index] = updatedNode
-                    it.copy(nodes = newNodes)
-                } else {
-                    it
-                }
-            }
-        }
+        // kuzuDBService.updateNode(...)
+        loadGraphFromDB()
     }
 
     override fun updateEdge(updatedEdge: GraphEdge) {
-        _selectedNoteGraph.update { graph ->
-            graph?.let {
-                val index = it.edges.indexOfFirst { e -> e.id == updatedEdge.id }
-                if (index != -1) {
-                    val newEdges = it.edges.toMutableList()
-                    newEdges[index] = updatedEdge
-                    it.copy(edges = newEdges)
-                } else {
-                    it
-                }
-            }
-        }
+        // kuzuDBService.updateEdge(...)
+        loadGraphFromDB()
     }
 
     override fun removeNode(node: GraphNode) {
-        _selectedNoteGraph.update {
-            it?.copy(nodes = (it.nodes - node).toMutableList())
-        }
+        kuzuDBService.deleteNode(node.typeName, node.id)
+        loadGraphFromDB()
     }
 
     override fun removeEdge(edge: GraphEdge) {
-        _selectedNoteGraph.update {
-            it?.copy(edges = (it.edges - edge).toMutableList())
-        }
+        // kuzuDBService.deleteEdge(...)
+        loadGraphFromDB()
     }
 }

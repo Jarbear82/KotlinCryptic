@@ -13,7 +13,8 @@ import org.tau.cryptic.ui.viewmodel.HomeViewModel
 
 @Composable
 fun Home(viewModel: HomeViewModel) {
-    var newItemText by remember { mutableStateOf("") }
+    var newGraphName by remember { mutableStateOf("") }
+    var newGraphPath by remember { mutableStateOf("") }
     val noteGraphs by viewModel.noteGraphs.collectAsState()
     val selectedNoteGraph by viewModel.selectedNoteGraph.collectAsState()
 
@@ -33,20 +34,28 @@ fun Home(viewModel: HomeViewModel) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             OutlinedTextField(
-                value = newItemText,
-                onValueChange = { newItemText = it },
+                value = newGraphName,
+                onValueChange = { newGraphName = it },
                 label = { Text("New graph name") },
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            OutlinedTextField(
+                value = newGraphPath,
+                onValueChange = { newGraphPath = it },
+                label = { Text("Directory path") },
                 modifier = Modifier.weight(1f)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Button(
                 onClick = {
-                    if (newItemText.isNotBlank()) {
-                        viewModel.addNoteGraph(newItemText)
-                        newItemText = ""
+                    if (newGraphName.isNotBlank() && newGraphPath.isNotBlank()) {
+                        viewModel.createNoteGraph(newGraphName, newGraphPath)
+                        newGraphName = ""
+                        newGraphPath = ""
                     }
                 },
-                enabled = newItemText.isNotBlank()
+                enabled = newGraphName.isNotBlank() && newGraphPath.isNotBlank()
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add graph")
             }

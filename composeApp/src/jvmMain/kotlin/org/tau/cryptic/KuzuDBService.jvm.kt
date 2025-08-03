@@ -1,28 +1,26 @@
 package org.tau.cryptic
 
-import com.kuzudb.Database as KuzuDatabase
-import com.kuzudb.Connection as KuzuConnection
-import java.nio.file.Files
-import java.nio.file.Paths
+import com.kuzudb.Database
+import com.kuzudb.Connection
 import org.tau.cryptic.pages.EdgeSchema
 import org.tau.cryptic.pages.NodeSchema
 import org.tau.cryptic.pages.PropertyType
+import java.nio.file.Files
+import java.nio.file.Paths
 
 actual class KuzuDBService {
-    private var db: KuzuDatabase? = null
-    private var conn: KuzuConnection? = null
+    private var db: Database? = null
+    private var conn: Connection? = null
 
-    actual fun initialize() {
+    actual fun initialize(dbPath: String) {
         try {
-            val dbPath = "kuzudb/database" // Changed to a file path
-            val dbDir = Paths.get("kuzudb")
-            if (!Files.exists(dbDir)) {
-                Files.createDirectories(dbDir)
+            val dbDirectory = Paths.get(dbPath).parent
+            if (!Files.exists(dbDirectory)) {
+                Files.createDirectories(dbDirectory)
             }
-            // Corrected line: Using the full constructor with default values for the other parameters.
-            db = KuzuDatabase(dbPath, 1024 * 1024 * 1024L, true, false, 0L, true, -1L)
-            conn = KuzuConnection(db)
-            println("KuzuDB initialized successfully.")
+            db = Database(dbPath)
+            conn = Connection(db)
+            println("KuzuDB initialized successfully at: $dbPath")
         } catch (e: Exception) {
             println("Failed to initialize KuzuDB: ${e.message}")
             e.printStackTrace()
@@ -39,56 +37,92 @@ actual class KuzuDBService {
         }
     }
 
-    /**
-     * Creates a node table in the database from a NodeSchema.
-     */
-    actual fun createNodeSchema(graphName: String, schema: NodeSchema) {
-        val tableName = "${graphName}_${schema.typeName}"
+    actual fun createNodeSchema(schema: NodeSchema) {
         val properties = schema.properties.joinToString(", ") {
             "${it.key.replace(" ", "_")} ${mapPropertyType(it.type)}"
         }
-        // The PRIMARY KEY (name) assumes 'name' is a unique identifier.
-        val query = "CREATE NODE TABLE $tableName (id STRING, $properties, PRIMARY KEY (id))"
-        try {
+        val query = "CREATE NODE TABLE ${schema.typeName} (id STRING, $properties, PRIMARY KEY (id))"
+        executeQuery(query, "create node table '${schema.typeName}'")
+    }
+
+    actual fun createEdgeSchema(schema: EdgeSchema, fromTable: String, toTable: String) {
+        val properties = schema.properties.joinToString(", ") {
+            "${it.key.replace(" ", "_")} ${mapPropertyType(it.type)}"
+        }
+        val query = "CREATE REL TABLE ${schema.typeName} (FROM $fromTable TO $toTable, $properties)"
+        executeQuery(query, "create edge table '${schema.typeName}'")
+    }
+
+    actual fun getNodeTables(): List<Map<String, Any?>> {
+        val query = "CALL SHOW_TABLES() WHERE type = 'NODE' RETURN name"
+        return executeQueryAndParseResults(query, "get node tables")
+    }
+
+    actual fun getEdgeTables(): List<Map<String, Any?>> {
+        val query = "CALL SHOW_TABLES() WHERE type = 'REL' RETURN name"
+        return executeQueryAndParseResults(query, "get edge tables")
+    }
+
+    actual fun getTableSchema(tableName: String): List<Map<String, Any?>> {
+        val query = "CALL TABLE_INFO('$tableName') RETURN name, type"
+        return executeQueryAndParseResults(query, "get table schema for '$tableName'")
+    }
+
+    actual fun insertNode(tableName: String, properties: Map<String, Any>): Boolean {
+        val keys = properties.keys.joinToString(", ")
+        val values = properties.values.joinToString(", ") { "'$it'" }
+        val query = "CREATE (n:$tableName {$keys: $values})"
+        return executeQuery(query, "insert node into '$tableName'")
+    }
+
+    actual fun deleteNode(tableName: String, nodeId: String): Boolean {
+        val query = "MATCH (n:$tableName {id: '$nodeId'}) DETACH DELETE n"
+        return executeQuery(query, "delete node from '$tableName'")
+    }
+
+    private fun executeQuery(query: String, description: String): Boolean {
+        return try {
             println("Executing query: $query")
             conn?.query(query)
-            println("Successfully created node table: $tableName")
+            println("Successfully executed query: $description")
+            true
         } catch (e: Exception) {
-            println("Failed to create node table '$tableName': ${e.message}")
+            println("Failed to execute query '$description': ${e.message}")
             e.printStackTrace()
+            false
         }
     }
 
-    /**
-     * Creates a relationship table in the database from an EdgeSchema.
-     */
-    actual fun createEdgeSchema(graphName: String, schema: EdgeSchema, fromTable: String, toTable: String) {
-        val tableName = "${graphName}_${schema.typeName}"
-        val fromTableName = "${graphName}_$fromTable"
-        val toTableName = "${graphName}_$toTable"
-        val properties = schema.properties.joinToString(", ") {
-            "${it.key.replace(" ", "_")} ${mapPropertyType(it.type)}"
-        }
-        // Note: KuzuDB requires REL tables to be defined with FROM and TO tables.
-        val query = "CREATE REL TABLE $tableName (FROM $fromTableName TO $toTableName, $properties)"
+    private fun executeQueryAndParseResults(query: String, description: String): List<Map<String, Any?>> {
+        val results = mutableListOf<Map<String, Any?>>()
         try {
             println("Executing query: $query")
-            conn?.query(query)
-            println("Successfully created edge table: $tableName")
+            val queryResult = conn?.query(query)
+            queryResult?.let {
+                while (it.hasNext()) {
+                    val row = it.next()
+                    val rowMap = mutableMapOf<String, Any?>()
+                    row.keys.forEach { key ->
+                        rowMap[key] = row.getValue(key).value
+                    }
+                    results.add(rowMap)
+                }
+            }
+            println("Successfully executed query and parsed results: $description")
         } catch (e: Exception) {
-            println("Failed to create edge table '$tableName': ${e.message}")
+            println("Failed to execute query '$description': ${e.message}")
             e.printStackTrace()
         }
+        return results
     }
 
     private fun mapPropertyType(type: PropertyType): String {
         return when (type) {
             PropertyType.TEXT, PropertyType.LONG_TEXT, PropertyType.IMAGE -> "STRING"
-            PropertyType.NUMBER -> "INT64" // Using INT64 for numbers
+            PropertyType.NUMBER -> "INT64"
             PropertyType.BOOLEAN -> "BOOLEAN"
             PropertyType.DATE -> "DATE"
             PropertyType.TIMESTAMP -> "TIMESTAMP"
-            // For complex types, we'll serialize them as STRING for now.
             PropertyType.LIST, PropertyType.MAP, PropertyType.VECTOR, PropertyType.STRUCT -> "STRING"
         }
     }

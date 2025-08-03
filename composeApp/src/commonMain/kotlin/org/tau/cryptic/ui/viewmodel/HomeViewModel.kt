@@ -24,6 +24,10 @@ class HomeViewModel(private val graphRepository: GraphRepository) : ViewModel() 
             initialValue = null
         )
 
+    fun createNoteGraph(name: String, filePath: String) {
+        graphRepository.createNoteGraph(name, filePath)
+    }
+
     fun addNoteGraph(name: String) {
         graphRepository.addNoteGraph(name)
     }

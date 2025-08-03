@@ -11,6 +11,7 @@ interface GraphRepository {
     val noteGraphs: Flow<List<NoteGraph>>
     val selectedNoteGraph: Flow<NoteGraph?>
 
+    fun createNoteGraph(name: String, filePath: String)
     fun addNoteGraph(name: String)
     fun removeNoteGraph(graph: NoteGraph)
     fun setSelectedNoteGraph(graph: NoteGraph)

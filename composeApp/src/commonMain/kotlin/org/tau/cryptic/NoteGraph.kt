@@ -15,6 +15,7 @@ import java.util.*
 data class NoteGraph(
     override val id: String = UUID.randomUUID().toString(),
     var name: String = "My Awesome Graph",
+    var filePath: String, // Path to the KuzuDB file
 
     // Schema Definitions
     val nodeSchemas: MutableList<NodeSchema> = mutableStateListOf(),
