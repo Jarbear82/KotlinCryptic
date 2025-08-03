@@ -24,8 +24,18 @@ import org.tau.cryptic.ui.viewmodel.SchemaViewModel
 /**
  * Defines the types for schema properties, now with more advanced types.
  */
-enum class PropertyType {
-    TEXT, NUMBER, BOOLEAN, LONG_TEXT, IMAGE, DATE, TIMESTAMP, LIST, MAP, VECTOR, STRUCT
+enum class PropertyType(val displayName: String) {
+    TEXT("Text"),
+    NUMBER("Number"),
+    BOOLEAN("Boolean"),
+    LONG_TEXT("Long Text"),
+    IMAGE("Image"),
+    DATE("Date"),
+    TIMESTAMP("Timestamp"),
+    LIST("List"),
+    MAP("Map"),
+    VECTOR("Vector"),
+    STRUCT("Struct")
 }
 
 /**
