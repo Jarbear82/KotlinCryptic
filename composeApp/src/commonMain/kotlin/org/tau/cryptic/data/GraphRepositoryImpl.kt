@@ -50,6 +50,17 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
         loadGraphFromDB()
     }
 
+    private fun mapDbTypetoPropertyType(dbType: String): PropertyType {
+        return when (dbType.uppercase()) {
+            "STRING" -> PropertyType.TEXT
+            "INT64" -> PropertyType.NUMBER
+            "BOOLEAN" -> PropertyType.BOOLEAN
+            "DATE" -> PropertyType.DATE
+            "TIMESTAMP" -> PropertyType.TIMESTAMP
+            else -> PropertyType.TEXT // Default to TEXT for unknown types
+        }
+    }
+
     private fun loadGraphFromDB() {
         val graph = _selectedNoteGraph.value ?: return
         val nodeTableNames = kuzuDBService.getNodeTables().mapNotNull { it["name"] as? String }
@@ -57,14 +68,20 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
 
         val nodeSchemas = nodeTableNames.mapIndexed { index, name ->
             val properties = kuzuDBService.getTableSchema(name).map {
-                PropertyDefinition(key = it["name"] as String, type = PropertyType.valueOf((it["type"] as String).uppercase()))
+                PropertyDefinition(
+                    key = it["name"] as String,
+                    type = mapDbTypetoPropertyType(it["type"] as String)
+                )
             }
             NodeSchema(id = index, typeName = name, properties = properties)
         }
 
         val edgeSchemas = edgeTableNames.mapIndexed { index, name ->
             val properties = kuzuDBService.getTableSchema(name).map {
-                PropertyDefinition(key = it["name"] as String, type = PropertyType.valueOf((it["type"] as String).uppercase()))
+                PropertyDefinition(
+                    key = it["name"] as String,
+                    type = mapDbTypetoPropertyType(it["type"] as String)
+                )
             }
             EdgeSchema(id = index, typeName = name, properties = properties)
         }

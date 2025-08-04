@@ -1,12 +1,15 @@
 package org.tau.cryptic
 
-import com.kuzudb.Database
 import com.kuzudb.Connection
+import com.kuzudb.Database
+import com.kuzudb.DataTypeID as KuzuTypeId
+import com.kuzudb.Value
+import com.kuzudb.*
+import java.nio.file.Files
+import java.nio.file.Paths
 import org.tau.cryptic.pages.EdgeSchema
 import org.tau.cryptic.pages.NodeSchema
 import org.tau.cryptic.pages.PropertyType
-import java.nio.file.Files
-import java.nio.file.Paths
 
 actual class KuzuDBService {
     private var db: Database? = null
@@ -100,10 +103,12 @@ actual class KuzuDBService {
             val queryResult = conn?.query(query)
             queryResult?.let {
                 while (it.hasNext()) {
-                    val row = it.next()
+                    val row = it.getNext()
                     val rowMap = mutableMapOf<String, Any?>()
-                    row.keys.forEach { key ->
-                        rowMap[key] = row.getValue(key).value
+                    for (i in 0 until it.numColumns) {
+                        val columnName = it.getColumnName(i)
+                        val value = row.getValue(i)
+                        rowMap[columnName] = convertKuzuValueToJavaType(value)
                     }
                     results.add(rowMap)
                 }
@@ -116,6 +121,44 @@ actual class KuzuDBService {
         return results
     }
 
+    private fun convertKuzuValueToJavaType(kuzuValue: Value): Any? {
+        return when (kuzuValue.dataType.id) {
+            KuzuTypeId.INT8 -> kuzuValue.getValue<Byte>()
+            KuzuTypeId.INT16 -> kuzuValue.getValue<Short>()
+            KuzuTypeId.INT32 -> kuzuValue.getValue<Int>()
+            KuzuTypeId.INT64 -> kuzuValue.getValue<Long>()
+            KuzuTypeId.FLOAT -> kuzuValue.getValue<Float>()
+            KuzuTypeId.DOUBLE -> kuzuValue.getValue<Double>()
+            KuzuTypeId.BOOL -> kuzuValue.getValue<Boolean>()
+            KuzuTypeId.STRING -> kuzuValue.getValue<String>()
+            KuzuTypeId.DATE -> kuzuValue.getValue<String>()
+            KuzuTypeId.TIMESTAMP -> kuzuValue.getValue<String>()
+            KuzuTypeId.INTERVAL -> kuzuValue.getValue<String>()
+            KuzuTypeId.LIST -> {
+                val listValues = kuzuValue.getValue<List<Value>>()
+                listValues.map { element -> convertKuzuValueToJavaType(element) }
+            }
+            KuzuTypeId.STRUCT -> {
+                val structMap = mutableMapOf<String, Any?>()
+                kuzuValue.getValue<Map<String, Value>>().forEach { (key, structValue) ->
+                    structMap[key] = convertKuzuValueToJavaType(structValue)
+                }
+                structMap
+            }
+            KuzuTypeId.MAP -> {
+                val mapValues = mutableMapOf<String, Any?>()
+                kuzuValue.getValue<Map<String, Value>>().forEach { (key, mapValue) ->
+                    mapValues[key] = convertKuzuValueToJavaType(mapValue)
+                }
+                mapValues
+            }
+            else -> {
+                println("Unhandled Kuzu data type in conversion: ${kuzuValue.dataType.id}")
+                null
+            }
+        }
+    }
+
     private fun mapPropertyType(type: PropertyType): String {
         return when (type) {
             PropertyType.TEXT, PropertyType.LONG_TEXT, PropertyType.IMAGE -> "STRING"
@@ -123,7 +166,7 @@ actual class KuzuDBService {
             PropertyType.BOOLEAN -> "BOOLEAN"
             PropertyType.DATE -> "DATE"
             PropertyType.TIMESTAMP -> "TIMESTAMP"
-            PropertyType.LIST, PropertyType.MAP, PropertyType.VECTOR, PropertyType.STRUCT -> "STRING"
+            PropertyType.LIST, PropertyType.MAP, PropertyType.VECTOR, PropertyType.STRUCT -> "STRING" // Note: This might need more specific handling based on your schema design.
         }
     }
 }

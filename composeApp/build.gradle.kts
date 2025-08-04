@@ -32,6 +32,7 @@ kotlin {
                 implementation(libs.androidx.lifecycle.viewmodelCompose)
                 implementation(libs.androidx.lifecycle.runtimeCompose)
                 implementation(compose.materialIconsExtended)
+                implementation(libs.kuzu)
             }
         }
         val androidMain by getting {
@@ -49,7 +50,7 @@ kotlin {
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.kotlinx.coroutinesSwing)
-                implementation(libs.kuzu)
+
             }
         }
     }
