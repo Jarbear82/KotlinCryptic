@@ -83,6 +83,10 @@ actual class KuzuDBService {
         return executeQuery(query, "delete node from '$tableName'")
     }
 
+    actual fun executeQuery(query: String): List<Map<String, Any?>> {
+        return executeQueryAndParseResults(query, "custom query")
+    }
+
     private fun executeQuery(query: String, description: String): Boolean {
         return try {
             println("Executing query: $query")

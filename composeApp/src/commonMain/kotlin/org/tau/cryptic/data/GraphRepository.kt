@@ -33,4 +33,6 @@ interface GraphRepository {
     fun updateEdge(updatedEdge: GraphEdge)
     fun removeNode(node: GraphNode)
     fun removeEdge(edge: GraphEdge)
+
+    fun executeQuery(query: String): List<Map<String, Any?>>
 }

@@ -33,6 +33,7 @@ import java.util.UUID
 import org.tau.cryptic.NoteGraph
 import org.tau.cryptic.components.Identifiable
 import org.tau.cryptic.ui.viewmodel.GraphViewModel
+import org.tau.cryptic.ui.viewmodel.QueryViewModel
 
 
 //region Data Models
@@ -88,7 +89,8 @@ data class GraphEdge(
 @Composable
 fun Graph(
     graphViewModel: GraphViewModel,
-    graph: NoteGraph
+    graph: NoteGraph,
+    queryViewModel: QueryViewModel
 ) {
     // State for selections
     var primarySelected by remember { mutableStateOf<GraphElement?>(null) }
@@ -233,7 +235,7 @@ fun Graph(
                                     selectedTabIndex = 1
                                 }
                             )
-                            3 -> QueryTab(graph = graph)
+                            3 -> QueryTab(queryViewModel)
                         }
                     }
                 }
@@ -515,10 +517,11 @@ private fun NewTab(
         }
     }
 }
+
 @Composable
-private fun QueryTab(graph: NoteGraph) {
+private fun QueryTab(queryViewModel: QueryViewModel) {
     var query by remember { mutableStateOf("MATCH (n) RETURN n") }
-    var result by remember { mutableStateOf("") }
+    val queryResult by queryViewModel.queryResult.collectAsState()
 
     Column(modifier = Modifier.padding(16.dp)) {
         Text("Cypher Query", style = MaterialTheme.typography.headlineSmall)
@@ -532,16 +535,18 @@ private fun QueryTab(graph: NoteGraph) {
         )
         Spacer(Modifier.height(8.dp))
         Button(onClick = {
-            // In a real app, you would parse and execute the query here.
-            // For this example, we'll just show a placeholder result.
-            result = "Query execution is not implemented in this demo.\nQuery: $query"
+            queryViewModel.executeQuery(query)
         }) {
             Text("Execute")
         }
         Spacer(Modifier.height(16.dp))
         Text("Result", style = MaterialTheme.typography.titleMedium)
         Card(modifier = Modifier.fillMaxWidth().weight(1f)) {
-            Text(result, modifier = Modifier.padding(16.dp))
+            LazyColumn(modifier = Modifier.padding(16.dp)) {
+                items(queryResult) { row ->
+                    Text(row.toString())
+                }
+            }
         }
     }
 }

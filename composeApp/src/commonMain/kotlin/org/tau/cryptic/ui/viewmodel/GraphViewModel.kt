@@ -55,4 +55,8 @@ class GraphViewModel(
     fun onNodeDragEnd(node: GraphNode) {
         layoutManager.onNodeDragEnd(node)
     }
+
+    fun onQueryResult(result: List<Map<String, Any?>>) {
+        // TODO: Process and update the graph visual state based on the query result
+    }
 }

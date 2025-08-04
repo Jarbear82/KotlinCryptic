@@ -15,6 +15,7 @@ import org.tau.cryptic.data.AppContainer
 import org.tau.cryptic.ui.viewmodel.GraphViewModel
 import org.tau.cryptic.ui.viewmodel.HomeViewModel
 import org.tau.cryptic.ui.viewmodel.SchemaViewModel
+import org.tau.cryptic.ui.viewmodel.QueryViewModel
 
 private data class NavItem(val label: String, val icon: ImageVector)
 
@@ -43,6 +44,7 @@ fun NavDrawer(appContainer: AppContainer) {
     val homeViewModel = remember { HomeViewModel(appContainer.graphRepository) }
     val graphViewModel = remember { GraphViewModel(appContainer.graphRepository, appContainer.layoutManager) }
     val schemaViewModel = remember { SchemaViewModel(appContainer.graphRepository) }
+    val queryViewModel = appContainer.queryViewModel
     val selectedNoteGraph by homeViewModel.selectedNoteGraph.collectAsState()
 
 
@@ -127,7 +129,8 @@ fun NavDrawer(appContainer: AppContainer) {
                         if (selectedNoteGraph != null) {
                             Graph(
                                 graphViewModel = graphViewModel,
-                                graph = selectedNoteGraph!!
+                                graph = selectedNoteGraph!!,
+                                queryViewModel = queryViewModel
                             )
                         } else {
                             NoGraphSelected()

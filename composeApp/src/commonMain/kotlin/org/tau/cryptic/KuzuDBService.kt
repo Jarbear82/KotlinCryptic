@@ -13,4 +13,5 @@ expect class KuzuDBService() {
     fun getTableSchema(tableName: String): List<Map<String, Any?>>
     fun insertNode(tableName: String, properties: Map<String, Any>): Boolean
     fun deleteNode(tableName: String, nodeId: String): Boolean
+    fun executeQuery(query: String): List<Map<String, Any?>>
 }
