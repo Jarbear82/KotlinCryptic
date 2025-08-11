@@ -1,8 +1,6 @@
 rootProject.name = "Cryptic"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
-includeBuild("../kuzudb-kt")
-
 pluginManagement {
     repositories {
         google {
@@ -13,6 +11,7 @@ pluginManagement {
             }
         }
         mavenCentral()
+        maven { url = uri("https://jitpack.io") }
         gradlePluginPortal()
     }
 }
