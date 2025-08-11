@@ -1,6 +1,8 @@
 rootProject.name = "Cryptic"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
+includeBuild("../kotlinlib-kuzudb")
+
 pluginManagement {
     repositories {
         google {

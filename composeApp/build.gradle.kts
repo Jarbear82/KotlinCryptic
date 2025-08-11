@@ -33,6 +33,7 @@ kotlin {
                 implementation(libs.androidx.lifecycle.runtimeCompose)
                 implementation(compose.materialIconsExtended)
                 implementation(libs.kuzu)
+                implementation(project(":library"))
             }
         }
         val androidMain by getting {
