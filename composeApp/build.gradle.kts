@@ -33,7 +33,7 @@ kotlin {
                 implementation(libs.androidx.lifecycle.runtimeCompose)
                 implementation(compose.materialIconsExtended)
                 implementation(libs.kuzu)
-                implementation("com.github.jarbear82:kuzudb-kt:master-da9a673edf-1")
+                implementation("com.github.jarbear82:kuzudb-kt:0.0.2")
 
             }
         }
@@ -52,6 +52,8 @@ kotlin {
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.kotlinx.coroutinesSwing)
+                // Uses kuzudb-kt for jvm
+
 
             }
         }
