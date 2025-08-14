@@ -3,6 +3,7 @@ package org.tau.cryptic.pages
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -64,6 +65,22 @@ fun Home(viewModel: HomeViewModel) {
                 Icon(Icons.Default.Add, contentDescription = "Add graph")
             }
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = {
+                scope.launch {
+                    viewModel.createInMemoryDatabase()
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(Icons.Default.Memory, contentDescription = "Add temporary sandbox")
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("New Sandbox")
+        }
+
 
         Spacer(modifier = Modifier.height(16.dp))
 

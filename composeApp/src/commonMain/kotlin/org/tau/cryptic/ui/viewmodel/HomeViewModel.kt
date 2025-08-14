@@ -28,6 +28,10 @@ class HomeViewModel(private val graphRepository: GraphRepository) : ViewModel() 
         graphRepository.createNoteGraph(name, filePath)
     }
 
+    suspend fun createInMemoryDatabase() {
+        graphRepository.createInMemoryDatabase()
+    }
+
     suspend fun addNoteGraph(name: String) {
         graphRepository.addNoteGraph(name)
     }

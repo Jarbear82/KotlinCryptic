@@ -37,6 +37,14 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
         setSelectedNoteGraph(newGraph)
     }
 
+    override suspend fun createInMemoryDatabase() {
+        val tempName = "Temporary Sandbox"
+        kuzuDBService.initialize(":memory:")
+        val newGraph = NoteGraph(name = tempName, filePath = ":memory:")
+        _noteGraphs.update { it + newGraph }
+        setSelectedNoteGraph(newGraph)
+    }
+
     override suspend fun addNoteGraph(name: String) {
         // This is now handled by createNoteGraph with a file path
     }

@@ -12,6 +12,7 @@ interface GraphRepository {
     val selectedNoteGraph: Flow<NoteGraph?>
 
     suspend fun createNoteGraph(name: String, filePath: String)
+    suspend fun createInMemoryDatabase()
     suspend fun addNoteGraph(name: String)
     suspend fun removeNoteGraph(graph: NoteGraph)
     suspend fun setSelectedNoteGraph(graph: NoteGraph)
