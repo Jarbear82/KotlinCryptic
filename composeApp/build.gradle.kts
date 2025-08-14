@@ -33,8 +33,7 @@ kotlin {
                 implementation(libs.androidx.lifecycle.runtimeCompose)
                 implementation(compose.materialIconsExtended)
                 implementation(libs.kuzu)
-                implementation("com.github.jarbear82:kuzudb-kt:0.0.2")
-
+                implementation("com.github.jarbear82.kuzudb-kt:kuzudb-kt:0.0.3")
             }
         }
         val androidMain by getting {
