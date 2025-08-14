@@ -11,28 +11,28 @@ interface GraphRepository {
     val noteGraphs: Flow<List<NoteGraph>>
     val selectedNoteGraph: Flow<NoteGraph?>
 
-    fun createNoteGraph(name: String, filePath: String)
-    fun addNoteGraph(name: String)
-    fun removeNoteGraph(graph: NoteGraph)
-    fun setSelectedNoteGraph(graph: NoteGraph)
+    suspend fun createNoteGraph(name: String, filePath: String)
+    suspend fun addNoteGraph(name: String)
+    suspend fun removeNoteGraph(graph: NoteGraph)
+    suspend fun setSelectedNoteGraph(graph: NoteGraph)
 
     // Node Schema Methods
-    fun addNodeSchema(schema: NodeSchema)
-    fun removeNodeSchema(schema: NodeSchema)
-    fun updateNodeSchema(updatedSchema: NodeSchema)
+    suspend fun addNodeSchema(schema: NodeSchema)
+    suspend fun removeNodeSchema(schema: NodeSchema)
+    suspend fun updateNodeSchema(updatedSchema: NodeSchema)
 
     // Edge Schema Methods
-    fun addEdgeSchema(schema: EdgeSchema, fromNodeTypeName: String, toNodeTypeName: String)
-    fun removeEdgeSchema(schema: EdgeSchema)
-    fun updateEdgeSchema(updatedSchema: EdgeSchema)
+    suspend fun addEdgeSchema(schema: EdgeSchema, fromNodeTypeName: String, toNodeTypeName: String)
+    suspend fun removeEdgeSchema(schema: EdgeSchema)
+    suspend fun updateEdgeSchema(updatedSchema: EdgeSchema)
 
     // Graph Element Methods
-    fun addNode(node: GraphNode)
-    fun addEdge(edge: GraphEdge)
-    fun updateNode(updatedNode: GraphNode)
-    fun updateEdge(updatedEdge: GraphEdge)
-    fun removeNode(node: GraphNode)
-    fun removeEdge(edge: GraphEdge)
+    suspend fun addNode(node: GraphNode)
+    suspend fun addEdge(edge: GraphEdge)
+    suspend fun updateNode(updatedNode: GraphNode)
+    suspend fun updateEdge(updatedEdge: GraphEdge)
+    suspend fun removeNode(node: GraphNode)
+    suspend fun removeEdge(edge: GraphEdge)
 
-    fun executeQuery(query: String): List<Map<String, Any?>>
+    suspend fun executeQuery(query: String): List<Map<String, Any?>>
 }

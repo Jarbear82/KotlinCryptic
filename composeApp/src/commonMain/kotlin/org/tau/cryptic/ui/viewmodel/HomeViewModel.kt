@@ -24,19 +24,19 @@ class HomeViewModel(private val graphRepository: GraphRepository) : ViewModel() 
             initialValue = null
         )
 
-    fun createNoteGraph(name: String, filePath: String) {
+    suspend fun createNoteGraph(name: String, filePath: String) {
         graphRepository.createNoteGraph(name, filePath)
     }
 
-    fun addNoteGraph(name: String) {
+    suspend fun addNoteGraph(name: String) {
         graphRepository.addNoteGraph(name)
     }
 
-    fun removeNoteGraph(graph: NoteGraph) {
+    suspend fun removeNoteGraph(graph: NoteGraph) {
         graphRepository.removeNoteGraph(graph)
     }
 
-    fun selectNoteGraph(graph: NoteGraph) {
+    suspend fun selectNoteGraph(graph: NoteGraph) {
         graphRepository.setSelectedNoteGraph(graph)
     }
 }

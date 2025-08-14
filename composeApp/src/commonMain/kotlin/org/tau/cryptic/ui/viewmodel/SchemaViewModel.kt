@@ -22,27 +22,27 @@ class SchemaViewModel(private val graphRepository: GraphRepository) : ViewModel(
             initialValue = null
         )
 
-    fun onNodeSchemaUpdate(schema: NodeSchema) {
+    suspend fun onNodeSchemaUpdate(schema: NodeSchema) {
         graphRepository.updateNodeSchema(schema)
     }
 
-    fun onNodeSchemaAdd(schema: NodeSchema) {
+    suspend fun onNodeSchemaAdd(schema: NodeSchema) {
         graphRepository.addNodeSchema(schema)
     }
 
-    fun onNodeSchemaRemove(schema: NodeSchema) {
+    suspend fun onNodeSchemaRemove(schema: NodeSchema) {
         graphRepository.removeNodeSchema(schema)
     }
 
-    fun onEdgeSchemaUpdate(schema: EdgeSchema) {
+    suspend fun onEdgeSchemaUpdate(schema: EdgeSchema) {
         graphRepository.updateEdgeSchema(schema)
     }
 
-    fun onEdgeSchemaAdd(schema: EdgeSchema, fromNodeTypeName: String, toNodeTypeName: String) {
+    suspend fun onEdgeSchemaAdd(schema: EdgeSchema, fromNodeTypeName: String, toNodeTypeName: String) {
         graphRepository.addEdgeSchema(schema, fromNodeTypeName, toNodeTypeName)
     }
 
-    fun onEdgeSchemaRemove(schema: EdgeSchema) {
+    suspend fun onEdgeSchemaRemove(schema: EdgeSchema) {
         graphRepository.removeEdgeSchema(schema)
     }
 }

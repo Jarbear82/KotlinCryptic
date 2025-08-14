@@ -29,21 +29,21 @@ class GraphViewModel(
 
     val graphVisualState: StateFlow<GraphVisualState> = layoutManager.graphVisualState
 
-    fun onUpdateNode(node: GraphNode) {
+    suspend fun onUpdateNode(node: GraphNode) {
         graphRepository.updateNode(node)
         layoutManager.updateNode(node)
     }
 
-    fun onUpdateEdge(edge: GraphEdge) {
+    suspend fun onUpdateEdge(edge: GraphEdge) {
         graphRepository.updateEdge(edge)
     }
 
-    fun onCreateNode(node: GraphNode) {
+    suspend fun onCreateNode(node: GraphNode) {
         graphRepository.addNode(node)
         layoutManager.addNode(node)
     }
 
-    fun onCreateEdge(edge: GraphEdge) {
+    suspend fun onCreateEdge(edge: GraphEdge) {
         graphRepository.addEdge(edge)
         layoutManager.addEdge(edge)
     }

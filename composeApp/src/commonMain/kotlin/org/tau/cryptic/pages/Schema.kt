@@ -102,7 +102,7 @@ data class EdgeSchema(
 //endregion
 
 @Composable
-fun Schema(
+suspend fun Schema(
     schemaViewModel: SchemaViewModel,
     nodeSchemas: List<NodeSchema>,
     edgeSchemas: List<EdgeSchema>

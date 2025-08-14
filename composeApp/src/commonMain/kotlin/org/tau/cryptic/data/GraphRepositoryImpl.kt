@@ -20,7 +20,7 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
     private val _selectedNoteGraph = MutableStateFlow<NoteGraph?>(null)
     override val selectedNoteGraph: Flow<NoteGraph?> = _selectedNoteGraph.asStateFlow()
 
-    override fun createNoteGraph(name: String, filePath: String) {
+    override suspend fun createNoteGraph(name: String, filePath: String) {
         val fullPath = File(filePath, "$name.kuzudb").absolutePath
         kuzuDBService.initialize(fullPath)
         val newGraph = NoteGraph(name = name, filePath = fullPath)
@@ -28,11 +28,11 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
         setSelectedNoteGraph(newGraph)
     }
 
-    override fun addNoteGraph(name: String) {
+    override suspend fun addNoteGraph(name: String) {
         // This is now handled by createNoteGraph with a file path
     }
 
-    override fun removeNoteGraph(graph: NoteGraph) {
+    override suspend fun removeNoteGraph(graph: NoteGraph) {
         // Implementation would involve deleting the database file and removing from the list
         _noteGraphs.update { it - graph }
         if (_selectedNoteGraph.value == graph) {
@@ -41,7 +41,7 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
         }
     }
 
-    override fun setSelectedNoteGraph(graph: NoteGraph) {
+    override suspend fun setSelectedNoteGraph(graph: NoteGraph) {
         if (_selectedNoteGraph.value?.filePath != graph.filePath) {
             kuzuDBService.close()
             kuzuDBService.initialize(graph.filePath)
@@ -61,7 +61,7 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
         }
     }
 
-    private fun loadGraphFromDB() {
+    private suspend fun loadGraphFromDB() {
         val graph = _selectedNoteGraph.value ?: return
         val nodeTableNames = kuzuDBService.getNodeTables().mapNotNull { it["name"] as? String }
         val edgeTableNames = kuzuDBService.getEdgeTables().mapNotNull { it["name"] as? String }
@@ -96,68 +96,68 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
     }
 
 
-    override fun addNodeSchema(schema: NodeSchema) {
+    override suspend fun addNodeSchema(schema: NodeSchema) {
         kuzuDBService.createNodeSchema(schema)
         loadGraphFromDB()
     }
 
-    override fun removeNodeSchema(schema: NodeSchema) {
+    override suspend fun removeNodeSchema(schema: NodeSchema) {
         // kuzuDBService.dropTable(schema.typeName)
         loadGraphFromDB()
     }
 
-    override fun updateNodeSchema(updatedSchema: NodeSchema) {
+    override suspend fun updateNodeSchema(updatedSchema: NodeSchema) {
         // This would involve complex ALTER TABLE operations
         loadGraphFromDB()
     }
 
-    override fun addEdgeSchema(schema: EdgeSchema, fromNodeTypeName: String, toNodeTypeName: String) {
+    override suspend fun addEdgeSchema(schema: EdgeSchema, fromNodeTypeName: String, toNodeTypeName: String) {
         kuzuDBService.createEdgeSchema(schema, fromNodeTypeName, toNodeTypeName)
         loadGraphFromDB()
     }
 
-    override fun removeEdgeSchema(schema: EdgeSchema) {
+    override suspend fun removeEdgeSchema(schema: EdgeSchema) {
         // kuzuDBService.dropTable(schema.typeName)
         loadGraphFromDB()
     }
 
-    override fun updateEdgeSchema(updatedSchema: EdgeSchema) {
+    override suspend fun updateEdgeSchema(updatedSchema: EdgeSchema) {
         // This would involve complex ALTER TABLE operations
         loadGraphFromDB()
     }
 
-    override fun addNode(node: GraphNode) {
+    override suspend fun addNode(node: GraphNode) {
         val properties = node.properties.associate { it.key to (it.value ?: "") }
         kuzuDBService.insertNode(node.typeName, properties)
         loadGraphFromDB() // Refresh state from DB
     }
 
-    override fun addEdge(edge: GraphEdge) {
+    override suspend fun addEdge(edge: GraphEdge) {
         // kuzuDBService.insertEdge(...)
         loadGraphFromDB()
     }
 
-    override fun updateNode(updatedNode: GraphNode) {
+    override suspend fun updateNode(updatedNode: GraphNode) {
         // kuzuDBService.updateNode(...)
         loadGraphFromDB()
     }
 
-    override fun updateEdge(updatedEdge: GraphEdge) {
+    override suspend fun updateEdge(updatedEdge: GraphEdge) {
         // kuzuDBService.updateEdge(...)
         loadGraphFromDB()
     }
 
-    override fun removeNode(node: GraphNode) {
+    override suspend fun removeNode(node: GraphNode) {
         kuzuDBService.deleteNode(node.typeName, node.id)
         loadGraphFromDB()
     }
 
-    override fun removeEdge(edge: GraphEdge) {
+    override suspend fun removeEdge(edge: GraphEdge) {
         // kuzuDBService.deleteEdge(...)
         loadGraphFromDB()
     }
 
-    override fun executeQuery(query: String): List<Map<String, Any?>> {
+    override suspend fun executeQuery(query: String): List<Map<String, Any?>> {
         return kuzuDBService.executeQuery(query)
     }
 }

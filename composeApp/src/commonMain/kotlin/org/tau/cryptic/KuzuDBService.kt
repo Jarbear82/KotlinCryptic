@@ -1,6 +1,8 @@
 package org.tau.cryptic
 
 import com.tau.kuzudb.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.tau.cryptic.pages.EdgeSchema
 import org.tau.cryptic.pages.NodeSchema
 
@@ -23,7 +25,7 @@ class KuzuDBService {
         db = null
     }
 
-    fun createNodeSchema(schema: NodeSchema) {
+    suspend fun createNodeSchema(schema: NodeSchema) {
         val properties = schema.properties.joinToString(", ") {
             "${it.key} ${it.type.name}"
         }
@@ -31,7 +33,7 @@ class KuzuDBService {
         executeQuery("CREATE NODE TABLE ${schema.typeName}($properties, PRIMARY KEY ($primaryKey))")
     }
 
-    fun createEdgeSchema(schema: EdgeSchema, fromTable: String, toTable: String) {
+    suspend fun createEdgeSchema(schema: EdgeSchema, fromTable: String, toTable: String) {
         val properties = schema.properties.joinToString(", ") {
             "${it.key} ${it.type.name}"
         }
@@ -39,19 +41,19 @@ class KuzuDBService {
         executeQuery(query)
     }
 
-    fun getNodeTables(): List<Map<String, Any?>> {
+    suspend fun getNodeTables(): List<Map<String, Any?>> {
         return executeQuery("CALL SHOW_TABLES() WHERE type = 'NODE'")
     }
 
-    fun getEdgeTables(): List<Map<String, Any?>> {
+    suspend fun getEdgeTables(): List<Map<String, Any?>> {
         return executeQuery("CALL SHOW_TABLES() WHERE type = 'REL'")
     }
 
-    fun getTableSchema(tableName: String): List<Map<String, Any?>> {
+    suspend fun getTableSchema(tableName: String): List<Map<String, Any?>> {
         return executeQuery("CALL TABLE_INFO('$tableName')")
     }
 
-    fun insertNode(tableName: String, properties: Map<String, Any>): Boolean {
+    suspend fun insertNode(tableName: String, properties: Map<String, Any>): Boolean {
         val keys = properties.keys.joinToString(", ")
         val values = properties.values.joinToString(", ") { "'$it'" }
         val query = "CREATE (n:$tableName {$keys: $values})"
@@ -59,13 +61,13 @@ class KuzuDBService {
         return result?.isSuccess() ?: false
     }
 
-    fun deleteNode(tableName: String, nodeId: String): Boolean {
+    suspend fun deleteNode(tableName: String, nodeId: String): Boolean {
         val query = "MATCH (n:$tableName) WHERE n._id = $nodeId DELETE n"
         val result = conn?.query(query)
         return result?.isSuccess() ?: false
     }
 
-    fun executeQuery(query: String): List<Map<String, Any?>> {
+    suspend fun executeQuery(query: String): List<Map<String, Any?>> = withContext(Dispatchers.IO) {
         val result = conn?.query(query)
         val list = mutableListOf<Map<String, Any?>>()
         if (result?.isSuccess() == true) {
@@ -78,6 +80,6 @@ class KuzuDBService {
                 list.add(map)
             }
         }
-        return list
+        list
     }
 }
