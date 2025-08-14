@@ -51,9 +51,6 @@ kotlin {
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.kotlinx.coroutinesSwing)
-                // Uses kuzudb-kt for jvm
-
-
             }
         }
     }
