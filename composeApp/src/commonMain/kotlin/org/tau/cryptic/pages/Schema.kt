@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import java.util.UUID
 
 // Local Imports
+import kotlinx.coroutines.launch
 import org.tau.cryptic.components.DeletableSelectableListView
 import org.tau.cryptic.components.Identifiable
 import org.tau.cryptic.ui.viewmodel.SchemaViewModel
@@ -102,7 +103,7 @@ data class EdgeSchema(
 //endregion
 
 @Composable
-suspend fun Schema(
+fun Schema(
     schemaViewModel: SchemaViewModel,
     nodeSchemas: List<NodeSchema>,
     edgeSchemas: List<EdgeSchema>
@@ -113,12 +114,15 @@ suspend fun Schema(
     // State for managing the selected tab (Nodes vs. Edges)
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     val tabs = listOf("Nodes", "Edges")
+    val scope = rememberCoroutineScope()
 
     // Update handler to reflect edits from the detail view back to the list
     val onSchemaUpdated: (SchemaDefinition) -> Unit = { updatedSchema ->
-        when (updatedSchema) {
-            is NodeSchema -> schemaViewModel.onNodeSchemaUpdate(updatedSchema)
-            is EdgeSchema -> schemaViewModel.onEdgeSchemaUpdate(updatedSchema)
+        scope.launch {
+            when (updatedSchema) {
+                is NodeSchema -> schemaViewModel.onNodeSchemaUpdate(updatedSchema)
+                is EdgeSchema -> schemaViewModel.onEdgeSchemaUpdate(updatedSchema)
+            }
         }
         selectedSchema = updatedSchema // Keep the updated item selected
     }
@@ -162,7 +166,9 @@ suspend fun Schema(
                     onItemClick = { selectedSchema = it },
                     onDeleteItemClick = {
                         if (selectedSchema?.id == it.id) selectedSchema = null
-                        schemaViewModel.onNodeSchemaRemove(it)
+                        scope.launch {
+                            schemaViewModel.onNodeSchemaRemove(it)
+                        }
                     },
                     onCreate = { typeName, properties ->
                         val finalProperties = mutableListOf(PropertyDefinition(key = "name", type = PropertyType.TEXT))
@@ -173,7 +179,9 @@ suspend fun Schema(
                             typeName = typeName,
                             properties = finalProperties
                         )
-                        schemaViewModel.onNodeSchemaAdd(newSchema)
+                        scope.launch {
+                            schemaViewModel.onNodeSchemaAdd(newSchema)
+                        }
                     }
                 )
                 1 -> EdgeSchemaContent(
@@ -183,7 +191,9 @@ suspend fun Schema(
                     onItemClick = { selectedSchema = it },
                     onDeleteItemClick = {
                         if (selectedSchema?.id == it.id) selectedSchema = null
-                        schemaViewModel.onEdgeSchemaRemove(it)
+                        scope.launch {
+                            schemaViewModel.onEdgeSchemaRemove(it)
+                        }
                     },
                     onCreate = { typeName, properties, from, to ->
                         val newSchema = EdgeSchema(
@@ -191,7 +201,9 @@ suspend fun Schema(
                             typeName = typeName,
                             properties = properties
                         )
-                        schemaViewModel.onEdgeSchemaAdd(newSchema, from, to)
+                        scope.launch {
+                            schemaViewModel.onEdgeSchemaAdd(newSchema, from, to)
+                        }
                     }
                 )
             }

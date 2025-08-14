@@ -8,6 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import org.tau.cryptic.components.DeletableSelectableListView
 import org.tau.cryptic.ui.viewmodel.HomeViewModel
 
@@ -17,6 +18,7 @@ fun Home(viewModel: HomeViewModel) {
     var newGraphPath by remember { mutableStateOf("") }
     val noteGraphs by viewModel.noteGraphs.collectAsState()
     val selectedNoteGraph by viewModel.selectedNoteGraph.collectAsState()
+    val scope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier
@@ -50,7 +52,9 @@ fun Home(viewModel: HomeViewModel) {
             Button(
                 onClick = {
                     if (newGraphName.isNotBlank() && newGraphPath.isNotBlank()) {
-                        viewModel.createNoteGraph(newGraphName, newGraphPath)
+                        scope.launch {
+                            viewModel.createNoteGraph(newGraphName, newGraphPath)
+                        }
                         newGraphName = ""
                         newGraphPath = ""
                     }
@@ -66,8 +70,16 @@ fun Home(viewModel: HomeViewModel) {
         DeletableSelectableListView(
             items = noteGraphs,
             selectedItem = selectedNoteGraph,
-            onItemClick = { viewModel.selectNoteGraph(it) },
-            onDeleteItemClick = { viewModel.removeNoteGraph(it) },
+            onItemClick = {
+                scope.launch {
+                    viewModel.selectNoteGraph(it)
+                }
+            },
+            onDeleteItemClick = {
+                scope.launch {
+                    viewModel.removeNoteGraph(it)
+                }
+            },
             modifier = Modifier.fillMaxSize()
         ) { item ->
             Text(

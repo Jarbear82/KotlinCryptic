@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import java.util.UUID
 
 // Local Imports
+import kotlinx.coroutines.launch
 import org.tau.cryptic.NoteGraph
 import org.tau.cryptic.components.Identifiable
 import org.tau.cryptic.ui.viewmodel.GraphViewModel
@@ -108,6 +109,7 @@ fun Graph(
     var panelWeight by remember { mutableFloatStateOf(0.4f) }
 
     val visualState by graphViewModel.graphVisualState.collectAsState()
+    val scope = rememberCoroutineScope()
 
 
     Box(
@@ -213,9 +215,11 @@ fun Graph(
                                 selectedElement = primarySelected,
                                 schemas = graph.nodeSchemas + graph.edgeSchemas,
                                 onUpdate = { updatedElement ->
-                                    when (updatedElement) {
-                                        is GraphNode -> graphViewModel.onUpdateNode(updatedElement)
-                                        is GraphEdge -> graphViewModel.onUpdateEdge(updatedElement)
+                                    scope.launch {
+                                        when (updatedElement) {
+                                            is GraphNode -> graphViewModel.onUpdateNode(updatedElement)
+                                            is GraphEdge -> graphViewModel.onUpdateEdge(updatedElement)
+                                        }
                                     }
                                     primarySelected = updatedElement
                                 }
@@ -225,12 +229,16 @@ fun Graph(
                                 edgeSchemas = graph.edgeSchemas,
                                 nodes = graph.nodes,
                                 onCreateNode = {
-                                    graphViewModel.onCreateNode(it)
+                                    scope.launch {
+                                        graphViewModel.onCreateNode(it)
+                                    }
                                     primarySelected = it
                                     selectedTabIndex = 1
                                 },
                                 onCreateEdge = {
-                                    graphViewModel.onCreateEdge(it)
+                                    scope.launch {
+                                        graphViewModel.onCreateEdge(it)
+                                    }
                                     primarySelected = it
                                     selectedTabIndex = 1
                                 }

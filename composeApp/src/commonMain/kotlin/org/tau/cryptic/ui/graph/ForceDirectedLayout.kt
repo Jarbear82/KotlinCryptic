@@ -7,7 +7,7 @@ import kotlin.math.sqrt
 
 class ForceDirectedLayout {
 
-    suspend fun calculateLayout(
+    fun calculateLayout(
         nodes: List<GraphNode>,
         edges: List<GraphEdge>,
         pinnedNodes: Map<String, Offset>

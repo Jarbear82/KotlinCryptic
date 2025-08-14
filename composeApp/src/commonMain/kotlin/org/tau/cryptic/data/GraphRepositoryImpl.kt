@@ -21,7 +21,16 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
     override val selectedNoteGraph: Flow<NoteGraph?> = _selectedNoteGraph.asStateFlow()
 
     override suspend fun createNoteGraph(name: String, filePath: String) {
-        val fullPath = File(filePath, "$name.kuzudb").absolutePath
+        val file = File(filePath)
+        val fullPath = if (file.isAbsolute) {
+            File(filePath, "$name.kuzudb").absolutePath
+        } else {
+            val appDataDir = File(System.getProperty("user.home"), "KotlinCryptic")
+            if (!appDataDir.exists()) {
+                appDataDir.mkdirs()
+            }
+            File(appDataDir, "$name.kuzudb").absolutePath
+        }
         kuzuDBService.initialize(fullPath)
         val newGraph = NoteGraph(name = name, filePath = fullPath)
         _noteGraphs.update { it + newGraph }
