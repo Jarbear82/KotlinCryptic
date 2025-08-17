@@ -4,6 +4,8 @@ import com.tau.kuzudb.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.tau.cryptic.pages.EdgeSchema
+import org.tau.cryptic.pages.GraphEdge
+import org.tau.cryptic.pages.GraphNode
 import org.tau.cryptic.pages.NodeSchema
 
 class KuzuDBService {
@@ -41,6 +43,18 @@ class KuzuDBService {
         executeQuery(query)
     }
 
+    suspend fun dropTable(tableName: String) {
+        executeQuery("DROP TABLE $tableName")
+    }
+
+    suspend fun renameTable(oldName: String, newName: String) {
+        executeQuery("ALTER TABLE $oldName RENAME TO $newName")
+    }
+
+    suspend fun renameProperty(tableName: String, oldName: String, newName: String) {
+        executeQuery("ALTER TABLE $tableName RENAME $oldName TO $newName")
+    }
+
     suspend fun getNodeTables(): List<Map<String, Any?>> {
         return executeQuery("CALL SHOW_TABLES() WHERE type = 'NODE'")
     }
@@ -61,10 +75,43 @@ class KuzuDBService {
         return result?.isSuccess() ?: false
     }
 
+    suspend fun insertEdge(edge: GraphEdge) {
+        val properties = edge.properties.joinToString(", ") {
+            "${it.key}: '${it.value}'"
+        }
+        val query = """
+            MATCH (a), (b)
+            WHERE a._id = '${edge.sourceNodeId}' AND b._id = '${edge.targetNodeId}'
+            CREATE (a)-[r:${edge.typeName} {$properties}]->(b)
+        """.trimIndent()
+        executeQuery(query)
+    }
+
+    suspend fun updateNode(node: GraphNode) {
+        val properties = node.properties.joinToString(", ") {
+            "n.${it.key} = '${it.value}'"
+        }
+        val query = "MATCH (n:${node.typeName}) WHERE n._id = '${node.id}' SET $properties"
+        executeQuery(query)
+    }
+
+    suspend fun updateEdge(edge: GraphEdge) {
+        val properties = edge.properties.joinToString(", ") {
+            "r.${it.key} = '${it.value}'"
+        }
+        val query = "MATCH ()-[r:${edge.typeName}]->() WHERE r._id = '${edge.id}' SET $properties"
+        executeQuery(query)
+    }
+
     suspend fun deleteNode(tableName: String, nodeId: String): Boolean {
-        val query = "MATCH (n:$tableName) WHERE n._id = $nodeId DELETE n"
+        val query = "MATCH (n:$tableName) WHERE n._id = '$nodeId' DETACH DELETE n"
         val result = conn?.query(query)
         return result?.isSuccess() ?: false
+    }
+
+    suspend fun deleteEdge(edge: GraphEdge) {
+        val query = "MATCH ()-[r:${edge.typeName}]->() WHERE r._id = '${edge.id}' DELETE r"
+        executeQuery(query)
     }
 
     suspend fun executeQuery(query: String): List<Map<String, Any?>> = withContext(Dispatchers.IO) {

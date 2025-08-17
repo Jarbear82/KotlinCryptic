@@ -50,7 +50,17 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
     }
 
     override suspend fun removeNoteGraph(graph: NoteGraph) {
-        // Implementation would involve deleting the database file and removing from the list
+        if (graph.filePath != ":memory:") {
+            val dbFile = File(graph.filePath)
+            if (dbFile.exists()) {
+                dbFile.delete()
+            }
+            val walFile = File(graph.filePath + ".wal")
+            if (walFile.exists()) {
+                walFile.delete()
+            }
+        }
+
         _noteGraphs.update { it - graph }
         if (_selectedNoteGraph.value == graph) {
             _selectedNoteGraph.value = null
@@ -119,12 +129,16 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
     }
 
     override suspend fun removeNodeSchema(schema: NodeSchema) {
-        // kuzuDBService.dropTable(schema.typeName)
+        kuzuDBService.dropTable(schema.typeName)
         loadGraphFromDB()
     }
 
     override suspend fun updateNodeSchema(updatedSchema: NodeSchema) {
-        // This would involve complex ALTER TABLE operations
+        // For simplicity, we'll only handle renaming for now
+        val originalSchema = _selectedNoteGraph.value?.nodeSchemas?.find { it.id == updatedSchema.id }
+        if (originalSchema != null && originalSchema.typeName != updatedSchema.typeName) {
+            kuzuDBService.renameTable(originalSchema.typeName, updatedSchema.typeName)
+        }
         loadGraphFromDB()
     }
 
@@ -134,12 +148,15 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
     }
 
     override suspend fun removeEdgeSchema(schema: EdgeSchema) {
-        // kuzuDBService.dropTable(schema.typeName)
+        kuzuDBService.dropTable(schema.typeName)
         loadGraphFromDB()
     }
 
     override suspend fun updateEdgeSchema(updatedSchema: EdgeSchema) {
-        // This would involve complex ALTER TABLE operations
+        val originalSchema = _selectedNoteGraph.value?.edgeSchemas?.find { it.id == updatedSchema.id }
+        if (originalSchema != null && originalSchema.typeName != updatedSchema.typeName) {
+            kuzuDBService.renameTable(originalSchema.typeName, updatedSchema.typeName)
+        }
         loadGraphFromDB()
     }
 
@@ -150,17 +167,17 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
     }
 
     override suspend fun addEdge(edge: GraphEdge) {
-        // kuzuDBService.insertEdge(...)
+        kuzuDBService.insertEdge(edge)
         loadGraphFromDB()
     }
 
     override suspend fun updateNode(updatedNode: GraphNode) {
-        // kuzuDBService.updateNode(...)
+        kuzuDBService.updateNode(updatedNode)
         loadGraphFromDB()
     }
 
     override suspend fun updateEdge(updatedEdge: GraphEdge) {
-        // kuzuDBService.updateEdge(...)
+        kuzuDBService.updateEdge(updatedEdge)
         loadGraphFromDB()
     }
 
@@ -170,7 +187,7 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
     }
 
     override suspend fun removeEdge(edge: GraphEdge) {
-        // kuzuDBService.deleteEdge(...)
+        kuzuDBService.deleteEdge(edge)
         loadGraphFromDB()
     }
 
