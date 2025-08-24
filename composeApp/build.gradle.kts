@@ -25,49 +25,41 @@ kotlin {
     jvm()
 
     sourceSets {
-        val javaSharedMain by creating {
 
-            dependencies{
-                implementation(libs.kuzu)
-
-            }
-        }
 
         val commonMain by getting {
             dependencies {
                 implementation(compose.runtime)
                 implementation(compose.foundation)
-
                 implementation(compose.material3)
                 implementation(compose.ui)
                 implementation(compose.components.resources)
                 implementation(compose.components.uiToolingPreview)
                 implementation(libs.androidx.lifecycle.viewmodelCompose)
                 implementation(libs.androidx.lifecycle.runtimeCompose)
-
                 implementation(compose.materialIconsExtended)
-
             }
         }
+
+        val javaSharedMain by creating {
+            dependsOn(commonMain)
+            dependencies{
+                implementation(libs.kuzu)
+            }
+        }
+
         val androidMain by getting {
+            dependsOn(javaSharedMain)
             dependencies {
                 implementation(compose.preview)
                 implementation(libs.androidx.activity.compose)
-
-                javaSharedMain
-            }
-        }
-        val commonTest by getting {
-            dependencies {
-                implementation(libs.kotlin.test)
             }
         }
         val jvmMain by getting {
-
+            dependsOn(javaSharedMain)
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.kotlinx.coroutinesSwing)
-                javaSharedMain
             }
         }
     }
