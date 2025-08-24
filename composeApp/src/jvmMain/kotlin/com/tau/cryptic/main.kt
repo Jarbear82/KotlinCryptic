@@ -2,7 +2,8 @@ package com.tau.cryptic
 
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import org.tau.cryptic.data.DefaultAppContainer
+import com.tau.cryptic.data.DefaultAppContainer
+
 
 fun main() = application {
     val appContainer = DefaultAppContainer()

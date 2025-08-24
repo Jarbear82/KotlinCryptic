@@ -10,12 +10,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import org.tau.cryptic.pages.*
-import org.tau.cryptic.data.AppContainer
-import org.tau.cryptic.ui.viewmodel.GraphViewModel
-import org.tau.cryptic.ui.viewmodel.HomeViewModel
-import org.tau.cryptic.ui.viewmodel.SchemaViewModel
-import org.tau.cryptic.ui.viewmodel.QueryViewModel
+import com.tau.cryptic.pages.*
+import com.tau.cryptic.data.AppContainer
+import com.tau.cryptic.ui.viewmodel.GraphViewModel
+import com.tau.cryptic.ui.viewmodel.HomeViewModel
+import com.tau.cryptic.ui.viewmodel.SchemaViewModel
+import com.tau.cryptic.ui.viewmodel.QueryViewModel
 
 private data class NavItem(val label: String, val icon: ImageVector)
 
@@ -35,6 +35,7 @@ private val configsNavItems = listOf(
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun NavDrawer(appContainer: AppContainer) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)

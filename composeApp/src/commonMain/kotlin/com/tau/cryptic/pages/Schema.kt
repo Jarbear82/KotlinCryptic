@@ -16,9 +16,9 @@ import androidx.compose.ui.unit.dp
 import java.util.UUID
 
 // Local Imports
-import org.tau.cryptic.components.DeletableSelectableListView
-import org.tau.cryptic.components.Identifiable
-import org.tau.cryptic.ui.viewmodel.SchemaViewModel
+import com.tau.cryptic.components.DeletableSelectableListView
+import com.tau.cryptic.components.Identifiable
+import com.tau.cryptic.ui.viewmodel.SchemaViewModel
 
 //region Data Models
 /**
@@ -100,6 +100,7 @@ data class EdgeSchema(
     override var allowSemiStructured: Boolean = false
 ) : SchemaDefinition
 //endregion
+
 
 @Composable
 fun Schema(

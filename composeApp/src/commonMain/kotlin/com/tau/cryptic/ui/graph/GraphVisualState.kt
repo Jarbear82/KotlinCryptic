@@ -1,8 +1,8 @@
 package com.tau.cryptic.ui.graph
 
 import androidx.compose.ui.geometry.Offset
-import org.tau.cryptic.pages.GraphEdge
-import org.tau.cryptic.pages.GraphNode
+import com.tau.cryptic.pages.GraphEdge
+import com.tau.cryptic.pages.GraphNode
 
 data class GraphVisualState(
     val nodes: List<Pair<GraphNode, Offset>> = emptyList(),

@@ -8,8 +8,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.tau.cryptic.components.DeletableSelectableListView
-import org.tau.cryptic.ui.viewmodel.HomeViewModel
+import com.tau.cryptic.components.DeletableSelectableListView
+import com.tau.cryptic.ui.viewmodel.HomeViewModel
 
 @Composable
 fun Home(viewModel: HomeViewModel) {

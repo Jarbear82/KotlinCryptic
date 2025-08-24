@@ -5,14 +5,15 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
-import org.tau.cryptic.NoteGraph
-import org.tau.cryptic.data.GraphRepository
-import org.tau.cryptic.pages.EdgeSchema
-import org.tau.cryptic.pages.NodeSchema
+import com.tau.cryptic.NoteGraph
+import com.tau.cryptic.data.GraphRepository
+import com.tau.cryptic.pages.EdgeSchema
+import com.tau.cryptic.pages.NodeSchema
 
 /**
  * A view model for the schema screen.
  */
+
 class SchemaViewModel(private val graphRepository: GraphRepository) : ViewModel() {
 
     val noteGraph: StateFlow<NoteGraph?> = graphRepository.selectedNoteGraph

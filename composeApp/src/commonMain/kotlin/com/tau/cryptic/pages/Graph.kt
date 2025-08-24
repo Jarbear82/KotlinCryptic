@@ -30,10 +30,10 @@ import androidx.compose.ui.unit.dp
 import java.util.UUID
 
 // Local Imports
-import org.tau.cryptic.NoteGraph
-import org.tau.cryptic.components.Identifiable
-import org.tau.cryptic.ui.viewmodel.GraphViewModel
-import org.tau.cryptic.ui.viewmodel.QueryViewModel
+import com.tau.cryptic.NoteGraph
+import com.tau.cryptic.components.Identifiable
+import com.tau.cryptic.ui.viewmodel.GraphViewModel
+import com.tau.cryptic.ui.viewmodel.QueryViewModel
 
 
 //region Data Models
@@ -86,6 +86,7 @@ data class GraphEdge(
 //endregion
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class)
+
 @Composable
 fun Graph(
     graphViewModel: GraphViewModel,

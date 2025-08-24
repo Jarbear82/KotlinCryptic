@@ -1,12 +1,13 @@
 package com.tau.cryptic.data
 
-import org.tau.cryptic.KuzuDBService
-import org.tau.cryptic.ui.graph.LayoutManager
-import org.tau.cryptic.ui.viewmodel.QueryViewModel
+import com.tau.cryptic.KuzuDBService
+import com.tau.cryptic.ui.graph.LayoutManager
+import com.tau.cryptic.ui.viewmodel.QueryViewModel
 
 /**
  * A simple dependency injection container.
  */
+
 interface AppContainer {
     val graphRepository: GraphRepository
     val layoutManager: LayoutManager
@@ -16,6 +17,7 @@ interface AppContainer {
 /**
  * The default implementation of the dependency injection container.
  */
+
 class DefaultAppContainer : AppContainer {
     private val kuzuDBService = KuzuDBService()
 

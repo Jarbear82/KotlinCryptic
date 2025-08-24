@@ -5,16 +5,17 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
-import org.tau.cryptic.NoteGraph
-import org.tau.cryptic.data.GraphRepository
-import org.tau.cryptic.pages.GraphEdge
-import org.tau.cryptic.pages.GraphNode
-import org.tau.cryptic.ui.graph.GraphVisualState
-import org.tau.cryptic.ui.graph.LayoutManager
+import com.tau.cryptic.NoteGraph
+import com.tau.cryptic.data.GraphRepository
+import com.tau.cryptic.pages.GraphEdge
+import com.tau.cryptic.pages.GraphNode
+import com.tau.cryptic.ui.graph.GraphVisualState
+import com.tau.cryptic.ui.graph.LayoutManager
 
 /**
  * A view model for the graph screen.
  */
+
 class GraphViewModel(
     private val graphRepository: GraphRepository,
     private val layoutManager: LayoutManager

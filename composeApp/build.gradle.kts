@@ -11,6 +11,10 @@ plugins {
 }
 
 kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-opt-in=kotlin.uuid.ExperimentalUuidApi")
+    }
+
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
@@ -22,6 +26,7 @@ kotlin {
 
     sourceSets {
         val javaSharedMain by creating {
+
             dependencies{
                 implementation(libs.kuzu)
 
@@ -32,12 +37,14 @@ kotlin {
             dependencies {
                 implementation(compose.runtime)
                 implementation(compose.foundation)
+
                 implementation(compose.material3)
                 implementation(compose.ui)
                 implementation(compose.components.resources)
                 implementation(compose.components.uiToolingPreview)
                 implementation(libs.androidx.lifecycle.viewmodelCompose)
                 implementation(libs.androidx.lifecycle.runtimeCompose)
+
                 implementation(compose.materialIconsExtended)
 
             }
@@ -46,9 +53,9 @@ kotlin {
             dependencies {
                 implementation(compose.preview)
                 implementation(libs.androidx.activity.compose)
+
                 javaSharedMain
             }
-
         }
         val commonTest by getting {
             dependencies {
@@ -56,15 +63,13 @@ kotlin {
             }
         }
         val jvmMain by getting {
+
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.kotlinx.coroutinesSwing)
                 javaSharedMain
             }
-
         }
-
-
     }
 }
 
@@ -73,6 +78,7 @@ android {
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
+
     sourceSets["main"].res.srcDirs("src/androidMain/res")
     sourceSets["main"].resources.srcDirs("src/commonMain/resources")
 
@@ -86,6 +92,7 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+
         }
     }
     buildTypes {
@@ -106,6 +113,7 @@ dependencies {
 compose.desktop {
     application {
         mainClass = "com.tau.cryptic.MainKt"
+
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)

@@ -5,8 +5,9 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
-import org.tau.cryptic.NoteGraph
-import org.tau.cryptic.data.GraphRepository
+import com.tau.cryptic.NoteGraph
+import com.tau.cryptic.data.GraphRepository
+
 
 class HomeViewModel(private val graphRepository: GraphRepository) : ViewModel() {
 

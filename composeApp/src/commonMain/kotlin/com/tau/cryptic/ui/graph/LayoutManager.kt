@@ -6,8 +6,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import org.tau.cryptic.pages.GraphEdge
-import org.tau.cryptic.pages.GraphNode
+import com.tau.cryptic.pages.GraphEdge
+import com.tau.cryptic.pages.GraphNode
 
 class LayoutManager {
 

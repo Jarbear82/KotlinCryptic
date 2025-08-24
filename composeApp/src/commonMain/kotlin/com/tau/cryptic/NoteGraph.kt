@@ -12,7 +12,7 @@ import kotlin.uuid.Uuid
  *
  * It implements Identifiable to be used in DeletableSelectableListView.
  */
-@kotlin.uuid.ExperimentalUuidApi
+
 data class NoteGraph(
     override val id: String = Uuid.random().toString(),
     var name: String = "My Awesome Graph",

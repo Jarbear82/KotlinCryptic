@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import org.tau.cryptic.KuzuDBService
+import com.tau.cryptic.KuzuDBService
 
 class QueryViewModel(private val kuzuDBService: KuzuDBService) : ViewModel() {
 
