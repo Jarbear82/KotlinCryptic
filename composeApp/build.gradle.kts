@@ -25,8 +25,6 @@ kotlin {
     jvm()
 
     sourceSets {
-
-
         val commonMain by getting {
             dependencies {
                 implementation(compose.runtime)
@@ -40,26 +38,24 @@ kotlin {
                 implementation(compose.materialIconsExtended)
             }
         }
-
-        val javaSharedMain by creating {
-            dependsOn(commonMain)
-            dependencies{
-                implementation(libs.kuzu)
+        val commonTest by getting {
+            dependencies {
+                implementation(kotlin("test"))
             }
         }
 
         val androidMain by getting {
-            dependsOn(javaSharedMain)
             dependencies {
                 implementation(compose.preview)
                 implementation(libs.androidx.activity.compose)
+                implementation(libs.kuzu)
             }
         }
         val jvmMain by getting {
-            dependsOn(javaSharedMain)
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.kotlinx.coroutinesSwing)
+                implementation(libs.kuzu)
             }
         }
     }
@@ -84,7 +80,6 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
-
         }
     }
     buildTypes {
@@ -105,8 +100,6 @@ dependencies {
 compose.desktop {
     application {
         mainClass = "com.tau.cryptic.MainKt"
-
-
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "com.tau.cryptic"

@@ -7,17 +7,18 @@ import com.kuzudb.Value
 import com.kuzudb.*
 import java.nio.file.Files
 import java.nio.file.Paths
+import com.tau.cryptic.pages.*
+import java.io.File
 
-
-actual class KuzuDBService {
+actual class KuzuDBService actual constructor() {
     private var db: Database? = null
     private var conn: Connection? = null
 
     actual fun initialize(dbPath: String) {
         try {
-            val dbDirectory = Paths.get(dbPath).parent
-            if (!Files.exists(dbDirectory)) {
-                Files.createDirectories(dbDirectory)
+            val dbDirectory = File(dbPath).parentFile
+            if (!dbDirectory.exists()) {
+                dbDirectory.mkdirs()
             }
             db = Database(dbPath)
             conn = Connection(db)
@@ -51,7 +52,7 @@ actual class KuzuDBService {
             "${it.key.replace(" ", "_")} ${mapPropertyType(it.type)}"
         }
         val query = "CREATE REL TABLE ${schema.typeName} (FROM $fromTable TO $toTable, $properties)"
-        executeQuery(query, "create edge table '${schema.typeName}'")
+        executeQuery(query, "create edge table '${schema.typeName}')")
     }
 
     actual fun getNodeTables(): List<Map<String, Any?>> {
@@ -168,7 +169,7 @@ actual class KuzuDBService {
             PropertyType.BOOLEAN -> "BOOLEAN"
             PropertyType.DATE -> "DATE"
             PropertyType.TIMESTAMP -> "TIMESTAMP"
-            PropertyType.LIST, PropertyType.MAP, PropertyType.VECTOR, PropertyType.STRUCT -> "STRING" // Note: This might need more specific handling based on your schema design.
+            PropertyType.LIST, PropertyType.MAP, PropertyType.VECTOR, PropertyType.STRUCT -> "STRING"
         }
     }
 }
