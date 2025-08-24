@@ -21,6 +21,13 @@ kotlin {
     jvm()
 
     sourceSets {
+        val javaSharedMain by creating {
+            dependencies{
+                implementation(libs.kuzu)
+
+            }
+        }
+
         val commonMain by getting {
             dependencies {
                 implementation(compose.runtime)
@@ -32,14 +39,16 @@ kotlin {
                 implementation(libs.androidx.lifecycle.viewmodelCompose)
                 implementation(libs.androidx.lifecycle.runtimeCompose)
                 implementation(compose.materialIconsExtended)
-                implementation(libs.kuzu)
+
             }
         }
         val androidMain by getting {
             dependencies {
                 implementation(compose.preview)
                 implementation(libs.androidx.activity.compose)
+                javaSharedMain
             }
+
         }
         val commonTest by getting {
             dependencies {
@@ -50,14 +59,17 @@ kotlin {
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.kotlinx.coroutinesSwing)
-
+                javaSharedMain
             }
+
         }
+
+
     }
 }
 
 android {
-    namespace = "org.tau.cryptic"
+    namespace = "com.tau.cryptic"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
@@ -65,7 +77,7 @@ android {
     sourceSets["main"].resources.srcDirs("src/commonMain/resources")
 
     defaultConfig {
-        applicationId = "org.tau.cryptic"
+        applicationId = "com.tau.cryptic"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
@@ -93,11 +105,11 @@ dependencies {
 
 compose.desktop {
     application {
-        mainClass = "org.tau.cryptic.MainKt"
+        mainClass = "com.tau.cryptic.MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "org.tau.cryptic"
+            packageName = "com.tau.cryptic"
             packageVersion = "1.0.0"
         }
     }
