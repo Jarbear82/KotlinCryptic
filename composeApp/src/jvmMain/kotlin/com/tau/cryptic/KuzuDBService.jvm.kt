@@ -232,6 +232,41 @@ actual class KuzuDBService actual constructor() {
 
     private fun convertKuzuValueToJavaType(kuzuValue: Value): Any? {
         return when (kuzuValue.dataType.id) {
+            KuzuTypeId.NODE -> {
+                val nodeValue = kuzuValue.getValue<Map<String, Value>>()
+                val properties = nodeValue["properties"]?.getValue<Map<String, Value>>()
+                val label = nodeValue["label"]?.getValue<String>()
+                val id = nodeValue["id"]?.getValue<String>()
+
+                val propertyMap = properties?.mapValues { convertKuzuValueToJavaType(it.value) }?.toMutableMap()
+                if (label != null) {
+                    propertyMap?.put("label", label)
+                }
+                if (id != null) {
+                    propertyMap?.put("id", id)
+                }
+                propertyMap
+            }
+            KuzuTypeId.REL -> {
+                val relValue = kuzuValue.getValue<Map<String, Value>>()
+                val properties = relValue["properties"]?.getValue<Map<String, Value>>()
+                val label = relValue["label"]?.getValue<String>()
+                val src = relValue["src"]?.getValue<String>()
+                val dst = relValue["dst"]?.getValue<String>()
+
+                val propertyMap = properties?.mapValues { convertKuzuValueToJavaType(it.value) }?.toMutableMap()
+                if (label != null) {
+                    propertyMap?.put("label", label)
+                }
+                if (src != null) {
+                    propertyMap?.put("src", src)
+                }
+                if (dst != null) {
+                    propertyMap?.put("dst", dst)
+                }
+
+                propertyMap
+            }
             KuzuTypeId.INT8 -> kuzuValue.getValue<Byte>()
             KuzuTypeId.INT16 -> kuzuValue.getValue<Short>()
             KuzuTypeId.INT32 -> kuzuValue.getValue<Int>()

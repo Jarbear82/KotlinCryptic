@@ -105,11 +105,10 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
     override fun loadGraphNodes() {
         val allNodes = kuzuDBService.getAllNodes()
         val graphNodes = allNodes.mapNotNull { nodeData ->
-            val properties = nodeData["properties"] as? Map<String, Any?>
-            val id = properties?.get("id") as? String
+            val id = nodeData["id"] as? String
             val typeName = nodeData["label"] as? String
             if (id != null && typeName != null) {
-                val propertyInstances = properties.map { (key, value) ->
+                val propertyInstances = nodeData.map { (key, value) ->
                     PropertyInstance(key, value)
                 }.toMutableList()
                 GraphNode(id = id, typeName = typeName, properties = propertyInstances)
@@ -123,13 +122,12 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
     override fun loadGraphEdges() {
         val allEdges = kuzuDBService.getAllEdges()
         val graphEdges = allEdges.mapNotNull { edgeData ->
-            val properties = edgeData["properties"] as? Map<String, Any?>
-            val id = properties?.get("id") as? String
+            val id = edgeData["id"] as? String
             val typeName = edgeData["label"] as? String
             val src = edgeData["src"] as? String
             val dst = edgeData["dst"] as? String
             if (id != null && typeName != null && src != null && dst != null) {
-                val propertyInstances = properties.map { (key, value) ->
+                val propertyInstances = edgeData.map { (key, value) ->
                     PropertyInstance(key, value)
                 }.toMutableList()
                 GraphEdge(id = id, typeName = typeName, sourceNodeId = src, targetNodeId = dst, properties = propertyInstances)
