@@ -70,6 +70,41 @@ actual class KuzuDBService actual constructor() {
         return executeQueryAndParseResults(query, "get table schema for '$tableName'")
     }
 
+    actual fun getAllNodes(): List<Map<String, Any?>> {
+        val query = "MATCH (n) RETURN n"
+        return executeQueryAndParseResults(query, "get all nodes")
+    }
+
+    actual fun getAllEdges(): List<Map<String, Any?>> {
+        val query = "MATCH ()-[r]-() RETURN r"
+        return executeQueryAndParseResults(query, "get all edges")
+    }
+
+    actual fun getNode(tableName: String, nodeId: String): Map<String, Any?>? {
+        val query = "MATCH (n:$tableName {id: '$nodeId'}) RETURN n"
+        return executeQueryAndParseResults(query, "get node from '$tableName'").firstOrNull()
+    }
+
+    actual fun getEdge(tableName: String, edgeId: String): Map<String, Any?>? {
+        val query = "MATCH ()-[r:$tableName {id: '$edgeId'}]-() RETURN r"
+        return executeQueryAndParseResults(query, "get edge from '$tableName'").firstOrNull()
+    }
+
+    actual fun deleteEdge(tableName: String, edgeId: String): Boolean {
+        val query = "MATCH ()-[r:$tableName {id: '$edgeId'}]-() DELETE r"
+        return executeQuery(query, "delete edge from '$tableName'")
+    }
+
+    actual fun getNodesByType(tableName: String): List<Map<String, Any?>> {
+        val query = "MATCH (n:$tableName) RETURN n"
+        return executeQueryAndParseResults(query, "get all nodes of type $tableName")
+    }
+
+    actual fun getEdgesByType(tableName: String): List<Map<String, Any?>> {
+        val query = "MATCH ()-[r:$tableName]-() RETURN r"
+        return executeQueryAndParseResults(query, "get all edges of type $tableName")
+    }
+
     actual fun createNode(tableName: String, properties: Map<String, Any>): Boolean {
         val keys = properties.keys.joinToString(", ")
         val values = properties.values.joinToString(", ") { "'$it'" }
@@ -80,6 +115,11 @@ actual class KuzuDBService actual constructor() {
     actual fun deleteNode(tableName: String, nodeId: String): Boolean {
         val query = "MATCH (n:$tableName {id: '$nodeId'}) DETACH DELETE n"
         return executeQuery(query, "delete node from '$tableName'")
+    }
+
+    actual fun dropTable(schemaTypeName: String): Boolean {
+        val query = "DROP TABLE $schemaTypeName"
+        return executeQuery(query, "drop table '$schemaTypeName'")
     }
 
     actual fun executeQuery(query: String): List<Map<String, Any?>> {

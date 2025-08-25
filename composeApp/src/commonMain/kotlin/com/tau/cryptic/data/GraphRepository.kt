@@ -18,6 +18,10 @@ interface GraphRepository {
     fun removeNoteGraph(graph: NoteGraph)
     fun setSelectedNoteGraph(graph: NoteGraph)
 
+    fun loadGraphSchemas()
+    fun loadGraphNodes()
+    fun loadGraphEdges()
+
     // Node Schema Methods
     fun addNodeSchema(schema: NodeSchema)
     fun removeNodeSchema(schema: NodeSchema)

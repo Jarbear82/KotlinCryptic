@@ -83,8 +83,37 @@ actual class KuzuDBService actual constructor() {
      */
     actual fun getAllEdges(): List<Map<String, Any?>> {
         val query = "MATCH ()-[r]-() RETURN r"
-        return executeQueryAndParseResults(query, "get all nodes")
+        return executeQueryAndParseResults(query, "get all edges")
     }
+
+    actual fun getNode(tableName: String, nodeId: String): Map<String, Any?>? {
+        val query = "MATCH (n:$tableName {id: \$nodeId}) RETURN n"
+        val params = mapOf("nodeId" to Value(nodeId))
+        return executeQueryAndParseResults(query, "get node from '$tableName'", params).firstOrNull()
+    }
+
+    actual fun getEdge(tableName: String, edgeId: String): Map<String, Any?>? {
+        val query = "MATCH ()-[r:$tableName {id: \$edgeId}]-() RETURN r"
+        val params = mapOf("edgeId" to Value(edgeId))
+        return executeQueryAndParseResults(query, "get edge from '$tableName'", params).firstOrNull()
+    }
+
+    actual fun deleteEdge(tableName: String, edgeId: String): Boolean {
+        val query = "MATCH ()-[r:$tableName {id: \$edgeId}]-() DELETE r"
+        val params = mapOf("edgeId" to Value(edgeId))
+        return executeQuery(query, "delete edge from '$tableName'", params)
+    }
+
+    actual fun getNodesByType(tableName: String): List<Map<String, Any?>> {
+        val query = "MATCH (n:$tableName) RETURN n"
+        return executeQueryAndParseResults(query, "get nodes by type '$tableName'")
+    }
+
+    actual fun getEdgesByType(tableName: String): List<Map<String, Any?>> {
+        val query = "MATCH ()-[r:$tableName]-() RETURN r"
+        return executeQueryAndParseResults(query, "get edges by type '$tableName'")
+    }
+
 
     /**
      * Creates a node using a prepared statement to safely handle properties.
@@ -152,10 +181,15 @@ actual class KuzuDBService actual constructor() {
         return executeQueryAndParseResults(query, "custom query")
     }
 
-    private fun executeQuery(query: String, description: String): Boolean {
+    private fun executeQuery(query: String, description: String, params: Map<String, Value> = emptyMap()): Boolean {
         return try {
             println("Executing query: $query")
-            conn?.query(query)
+            if (params.isEmpty()) {
+                conn?.query(query)
+            } else {
+                val preparedStatement = conn?.prepare(query)
+                conn?.execute(preparedStatement, params)
+            }
             println("Successfully executed query: $description")
             true
         } catch (e: Exception) {
@@ -165,11 +199,16 @@ actual class KuzuDBService actual constructor() {
         }
     }
 
-    private fun executeQueryAndParseResults(query: String, description: String): List<Map<String, Any?>> {
+    private fun executeQueryAndParseResults(query: String, description: String, params: Map<String, Value> = emptyMap()): List<Map<String, Any?>> {
         val results = mutableListOf<Map<String, Any?>>()
         try {
             println("Executing query: $query")
-            val queryResult = conn?.query(query)
+            val queryResult = if (params.isEmpty()) {
+                conn?.query(query)
+            } else {
+                val preparedStatement = conn?.prepare(query)
+                conn?.execute(preparedStatement, params)
+            }
             queryResult?.let {
                 while (it.hasNext()) {
                     val row = it.getNext()
@@ -189,6 +228,7 @@ actual class KuzuDBService actual constructor() {
         }
         return results
     }
+
 
     private fun convertKuzuValueToJavaType(kuzuValue: Value): Any? {
         return when (kuzuValue.dataType.id) {

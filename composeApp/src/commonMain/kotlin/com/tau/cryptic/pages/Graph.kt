@@ -27,7 +27,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import java.util.UUID
+import kotlin.uuid.Uuid
 
 // Local Imports
 import com.tau.cryptic.NoteGraph
@@ -63,7 +63,7 @@ sealed interface GraphElement : Identifiable {
  * @param properties The list of property instances for this node.
  */
 data class GraphNode(
-    override val id: String = UUID.randomUUID().toString(),
+    override val id: String = Uuid.random().toString(),
     override val typeName: String,
     override val properties: MutableList<PropertyInstance>
 ) : GraphElement
@@ -77,7 +77,7 @@ data class GraphNode(
  * @param properties The list of property instances for this edge.
  */
 data class GraphEdge(
-    override val id: String = UUID.randomUUID().toString(),
+    override val id: String = Uuid.random().toString(),
     override val typeName: String,
     val sourceNodeId: String,
     val targetNodeId: String,
@@ -109,6 +109,7 @@ fun Graph(
     var panelWeight by remember { mutableFloatStateOf(0.4f) }
 
     val visualState by graphViewModel.graphVisualState.collectAsState()
+    val noteGraph by graphViewModel.noteGraph.collectAsState()
 
 
     Box(
@@ -199,8 +200,8 @@ fun Graph(
                                 graphName = graph.name,
                                 primarySelected = primarySelected,
                                 secondarySelected = secondarySelected,
-                                nodes = graph.nodes,
-                                edges = graph.edges,
+                                nodes = noteGraph?.nodes ?: emptyList(),
+                                edges = noteGraph?.edges ?: emptyList(),
                                 onElementSelect = { element ->
                                     if (element is GraphNode && isCtrlPressed) {
                                         secondarySelected = if (secondarySelected?.id == element.id) null else element
@@ -224,7 +225,7 @@ fun Graph(
                             2 -> NewTab(
                                 nodeSchemas = graph.nodeSchemas,
                                 edgeSchemas = graph.edgeSchemas,
-                                nodes = graph.nodes,
+                                nodes = noteGraph?.nodes ?: emptyList(),
                                 onCreateNode = {
                                     graphViewModel.onCreateNode(it)
                                     primarySelected = it
