@@ -2,11 +2,11 @@ package com.tau.cryptic.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tau.cryptic.NoteGraph
+import com.tau.cryptic.data.GraphRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
-import com.tau.cryptic.NoteGraph
-import com.tau.cryptic.data.GraphRepository
 
 
 class HomeViewModel(private val graphRepository: GraphRepository) : ViewModel() {
@@ -25,12 +25,12 @@ class HomeViewModel(private val graphRepository: GraphRepository) : ViewModel() 
             initialValue = null
         )
 
-    fun createNoteGraph(name: String, filePath: String) {
-        graphRepository.createNoteGraph(name, filePath)
+    fun createNoteGraph(filePath: String) {
+        graphRepository.createNoteGraph(filePath)
     }
 
-    fun addNoteGraph(name: String) {
-        graphRepository.addNoteGraph(name)
+    fun addNoteGraph(filePath: String) {
+        graphRepository.addNoteGraph(filePath)
     }
 
     fun removeNoteGraph(graph: NoteGraph) {

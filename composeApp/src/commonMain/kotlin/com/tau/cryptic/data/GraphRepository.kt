@@ -1,8 +1,8 @@
 package com.tau.cryptic.data
 
-import kotlinx.coroutines.flow.Flow
 import com.tau.cryptic.NoteGraph
 import com.tau.cryptic.pages.*
+import kotlinx.coroutines.flow.Flow
 
 /**
  * A repository to manage the graph data.
@@ -13,8 +13,8 @@ interface GraphRepository {
     val noteGraphs: Flow<List<NoteGraph>>
     val selectedNoteGraph: Flow<NoteGraph?>
 
-    fun createNoteGraph(name: String, filePath: String)
-    fun addNoteGraph(name: String)
+    fun createNoteGraph(filePath: String)
+    fun addNoteGraph(filePath: String)
     fun removeNoteGraph(graph: NoteGraph)
     fun setSelectedNoteGraph(graph: NoteGraph)
 

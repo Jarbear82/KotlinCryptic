@@ -15,8 +15,7 @@ import kotlin.uuid.Uuid
 
 data class NoteGraph(
     override val id: String = Uuid.random().toString(),
-    var name: String = "My Awesome Graph",
-    var filePath: String, // Path to the KuzuDB file
+    var filePath: String, // Path to the KuzuDB directory
 
     // Schema Definitions
     val nodeSchemas: MutableList<NodeSchema> = mutableStateListOf(),
@@ -25,4 +24,7 @@ data class NoteGraph(
     // Graph Data
     val nodes: MutableList<GraphNode> = mutableStateListOf(),
     val edges: MutableList<GraphEdge> = mutableStateListOf()
-) : Identifiable
+) : Identifiable {
+    val name: String
+        get() = filePath.substringAfterLast('/').substringAfterLast('\\')
+}

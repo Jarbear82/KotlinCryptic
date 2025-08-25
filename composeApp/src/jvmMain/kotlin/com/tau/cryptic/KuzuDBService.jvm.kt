@@ -70,16 +70,66 @@ actual class KuzuDBService actual constructor() {
         return executeQueryAndParseResults(query, "get table schema for '$tableName'")
     }
 
-    actual fun insertNode(tableName: String, properties: Map<String, Any>): Boolean {
-        val keys = properties.keys.joinToString(", ")
-        val values = properties.values.joinToString(", ") { "'$it'" }
-        val query = "CREATE (n:$tableName {$keys: $values})"
-        return executeQuery(query, "insert node into '$tableName'")
+    /**
+     * Creates a node using a prepared statement to safely handle properties.
+     */
+    actual fun createNode(tableName: String, properties: Map<String, Any>): Boolean {
+        // Build property placeholders, e.g., "{id: $id, name: $name}"
+        val propertyPlaceholders = properties.keys.joinToString(", ") { key ->
+            val sanitizedKey = key.replace(" ", "_")
+            "$sanitizedKey: \$$sanitizedKey"
+        }
+        // Table names cannot be parameters, so they are part of the query string.
+        val query = "CREATE (n:$tableName {$propertyPlaceholders})"
+
+        return try {
+            // Build the parameter map where keys match the placeholders.
+            val params = properties.entries.associate { (key, value) ->
+                key.replace(" ", "_") to Value(value)
+            }
+            // Prepare the statement.
+            val preparedStatement = conn?.prepare(query)
+            // Execute with the parameters.
+            conn?.execute(preparedStatement, params)
+            println("Successfully created node in '$tableName'")
+            true
+        } catch (e: Exception) {
+            println("Failed to create node in '$tableName': ${e.message}")
+            e.printStackTrace()
+            false
+        }
     }
 
+    /**
+     * Deletes a node using a prepared statement to safely handle the node ID.
+     */
     actual fun deleteNode(tableName: String, nodeId: String): Boolean {
-        val query = "MATCH (n:$tableName {id: '$nodeId'}) DETACH DELETE n"
-        return executeQuery(query, "delete node from '$tableName'")
+        // Table names cannot be parameters; the node ID will be a parameter.
+        val query = "MATCH (n:$tableName {id: \$nodeId}) DETACH DELETE n"
+        return try {
+            // Prepare the statement.
+            val preparedStatement = conn?.prepare(query)
+            // Create the parameter map. The key "nodeId" matches "$nodeId" in the query.
+            val params = mapOf("nodeId" to Value(nodeId))
+            // Execute with the parameters.
+            conn?.execute(preparedStatement, params)
+            println("Successfully deleted node from '$tableName'")
+            true
+        } catch (e: Exception) {
+            println("Failed to delete node from '$tableName': ${e.message}")
+            e.printStackTrace()
+            false
+        }
+    }
+
+    /**
+     * Drops a table. Note: Table names cannot be parameterized in Cypher.
+     */
+    actual fun dropTable(schemaTypeName: String): Boolean {
+        // Schema identifiers (like table names) cannot be parameters.
+        // Therefore, we use string formatting and execute the query directly.
+        val query = "DROP TABLE $schemaTypeName"
+        return executeQuery(query, "drop table '$schemaTypeName'")
     }
 
     actual fun executeQuery(query: String): List<Map<String, Any?>> {

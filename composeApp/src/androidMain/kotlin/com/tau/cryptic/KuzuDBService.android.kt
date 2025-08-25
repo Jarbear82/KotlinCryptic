@@ -70,7 +70,7 @@ actual class KuzuDBService actual constructor() {
         return executeQueryAndParseResults(query, "get table schema for '$tableName'")
     }
 
-    actual fun insertNode(tableName: String, properties: Map<String, Any>): Boolean {
+    actual fun createNode(tableName: String, properties: Map<String, Any>): Boolean {
         val keys = properties.keys.joinToString(", ")
         val values = properties.values.joinToString(", ") { "'$it'" }
         val query = "CREATE (n:$tableName {$keys: $values})"

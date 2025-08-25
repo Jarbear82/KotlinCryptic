@@ -1,12 +1,12 @@
 package com.tau.cryptic.data
 
+import com.tau.cryptic.KuzuDBService
+import com.tau.cryptic.NoteGraph
+import com.tau.cryptic.pages.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import com.tau.cryptic.KuzuDBService
-import com.tau.cryptic.NoteGraph
-import com.tau.cryptic.pages.*
 import java.io.File
 
 /**
@@ -20,16 +20,21 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
     private val _selectedNoteGraph = MutableStateFlow<NoteGraph?>(null)
     override val selectedNoteGraph: Flow<NoteGraph?> = _selectedNoteGraph.asStateFlow()
 
-    override fun createNoteGraph(name: String, filePath: String) {
-        val fullPath = File(filePath, "$name.kuzudb").absolutePath
-        kuzuDBService.initialize(fullPath)
-        val newGraph = NoteGraph(name = name, filePath = fullPath)
+    override fun createNoteGraph(filePath: String) {
+        val directory = File(filePath)
+        if (!directory.exists()) {
+            directory.mkdirs()
+        }
+        val dbPath = File(directory, "database.kuzudb").absolutePath
+        kuzuDBService.initialize(dbPath)
+        val newGraph = NoteGraph(filePath = filePath)
         _noteGraphs.update { it + newGraph }
         setSelectedNoteGraph(newGraph)
     }
 
-    override fun addNoteGraph(name: String) {
-        // This is now handled by createNoteGraph with a file path
+    override fun addNoteGraph(filePath: String) {
+        val newGraph = NoteGraph(filePath = filePath)
+        _noteGraphs.update { it + newGraph }
     }
 
     override fun removeNoteGraph(graph: NoteGraph) {
@@ -42,9 +47,10 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
     }
 
     override fun setSelectedNoteGraph(graph: NoteGraph) {
+        val dbPath = File(graph.filePath, "database.kuzudb").absolutePath
         if (_selectedNoteGraph.value?.filePath != graph.filePath) {
             kuzuDBService.close()
-            kuzuDBService.initialize(graph.filePath)
+            kuzuDBService.initialize(dbPath)
         }
         _selectedNoteGraph.value = graph
         loadGraphFromDB()
@@ -102,7 +108,7 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
     }
 
     override fun removeNodeSchema(schema: NodeSchema) {
-        // kuzuDBService.dropTable(schema.typeName)
+        kuzuDBService.dropTable(schema.typeName)
         loadGraphFromDB()
     }
 
@@ -128,7 +134,7 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
 
     override fun addNode(node: GraphNode) {
         val properties = node.properties.associate { it.key to (it.value ?: "") }
-        kuzuDBService.insertNode(node.typeName, properties)
+        kuzuDBService.createNode(node.typeName, properties)
         loadGraphFromDB() // Refresh state from DB
     }
 
