@@ -71,6 +71,22 @@ actual class KuzuDBService actual constructor() {
     }
 
     /**
+     * Get all nodes
+     */
+    actual fun getAllNodes(): List<Map<String, Any?>> {
+        val query = "MATCH (n) RETURN n"
+        return executeQueryAndParseResults(query, "get all nodes")
+    }
+
+    /**
+     * Get all edges
+     */
+    actual fun getAllEdges(): List<Map<String, Any?>> {
+        val query = "MATCH ()-[r]-() RETURN r"
+        return executeQueryAndParseResults(query, "get all nodes")
+    }
+
+    /**
      * Creates a node using a prepared statement to safely handle properties.
      */
     actual fun createNode(tableName: String, properties: Map<String, Any>): Boolean {
