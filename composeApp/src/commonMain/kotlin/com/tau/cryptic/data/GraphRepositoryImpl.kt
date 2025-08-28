@@ -176,17 +176,20 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
     }
 
     override fun addEdge(edge: GraphEdge) {
-        // kuzuDBService.insertEdge(...)
+        val properties = edge.properties.associate { it.key to (it.value ?: "") }
+        kuzuDBService.addEdge(edge.typeName, edge.sourceNodeId, edge.targetNodeId, properties)
         loadGraphEdges()
     }
 
     override fun updateNode(updatedNode: GraphNode) {
-        // kuzuDBService.updateNode(...)
+        val properties = updatedNode.properties.associate { it.key to (it.value ?: "") }
+        kuzuDBService.updateNode(updatedNode.typeName, updatedNode.id, properties)
         loadGraphNodes()
     }
 
     override fun updateEdge(updatedEdge: GraphEdge) {
-        // kuzuDBService.updateEdge(...)
+        val properties = updatedEdge.properties.associate { it.key to (it.value ?: "") }
+        kuzuDBService.updateEdge(updatedEdge.typeName, updatedEdge.id, properties)
         loadGraphEdges()
     }
 

@@ -112,6 +112,30 @@ actual class KuzuDBService actual constructor() {
         return executeQuery(query, "insert node into '$tableName'")
     }
 
+    actual fun addEdge(tableName: String, fromNodeId: String, toNodeId: String, properties: Map<String, Any>): Boolean {
+        val props = properties.entries.joinToString(", ") {
+            "${it.key}: '${it.value}'"
+        }
+        val query = "MATCH (a), (b) WHERE a.id = '$fromNodeId' AND b.id = '$toNodeId' CREATE (a)-[r:$tableName {$props}]->(b)"
+        return executeQuery(query, "insert edge into '$tableName'")
+    }
+
+    actual fun updateNode(tableName: String, nodeId: String, properties: Map<String, Any>): Boolean {
+        val props = properties.entries.joinToString(", ") {
+            "n.${it.key} = '${it.value}'"
+        }
+        val query = "MATCH (n:$tableName {id: '$nodeId'}) SET $props"
+        return executeQuery(query, "update node in '$tableName'")
+    }
+
+    actual fun updateEdge(tableName: String, edgeId: String, properties: Map<String, Any>): Boolean {
+        val props = properties.entries.joinToString(", ") {
+            "r.${it.key} = '${it.value}'"
+        }
+        val query = "MATCH ()-[r:$tableName {id: '$edgeId'}]-() SET $props"
+        return executeQuery(query, "update edge in '$tableName'")
+    }
+
     actual fun deleteNode(tableName: String, nodeId: String): Boolean {
         val query = "MATCH (n:$tableName {id: '$nodeId'}) DETACH DELETE n"
         return executeQuery(query, "delete node from '$tableName'")
@@ -166,6 +190,41 @@ actual class KuzuDBService actual constructor() {
 
     private fun convertKuzuValueToJavaType(kuzuValue: Value): Any? {
         return when (kuzuValue.dataType.id) {
+            KuzuTypeId.NODE -> {
+                val nodeValue = kuzuValue.getValue<Map<String, Value>>()
+                val properties = nodeValue["properties"]?.getValue<Map<String, Value>>()
+                val label = nodeValue["label"]?.getValue<String>()
+                val id = nodeValue["id"]?.getValue<String>()
+
+                val propertyMap = properties?.mapValues { convertKuzuValueToJavaType(it.value) }?.toMutableMap()
+                if (label != null) {
+                    propertyMap?.put("label", label)
+                }
+                if (id != null) {
+                    propertyMap?.put("id", id)
+                }
+                propertyMap
+            }
+            KuzuTypeId.REL -> {
+                val relValue = kuzuValue.getValue<Map<String, Value>>()
+                val properties = relValue["properties"]?.getValue<Map<String, Value>>()
+                val label = relValue["label"]?.getValue<String>()
+                val src = relValue["src"]?.getValue<String>()
+                val dst = relValue["dst"]?.getValue<String>()
+
+                val propertyMap = properties?.mapValues { convertKuzuValueToJavaType(it.value) }?.toMutableMap()
+                if (label != null) {
+                    propertyMap?.put("label", label)
+                }
+                if (src != null) {
+                    propertyMap?.put("src", src)
+                }
+                if (dst != null) {
+                    propertyMap?.put("dst", dst)
+                }
+
+                propertyMap
+            }
             KuzuTypeId.INT8 -> kuzuValue.getValue<Byte>()
             KuzuTypeId.INT16 -> kuzuValue.getValue<Short>()
             KuzuTypeId.INT32 -> kuzuValue.getValue<Int>()

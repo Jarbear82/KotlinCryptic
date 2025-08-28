@@ -19,6 +19,9 @@ expect class KuzuDBService() {
     fun getNodesByType(tableName: String): List<Map<String, Any?>>
     fun getEdgesByType(tableName: String): List<Map<String, Any?>>
     fun createNode(tableName: String, properties: Map<String, Any>): Boolean
+    fun addEdge(tableName: String, fromNodeId: String, toNodeId: String, properties: Map<String, Any>): Boolean
+    fun updateNode(tableName: String, nodeId: String, properties: Map<String, Any>): Boolean
+    fun updateEdge(tableName: String, edgeId: String, properties: Map<String, Any>): Boolean
     fun deleteNode(tableName: String, nodeId: String): Boolean
     fun dropTable(schemaTypeName: String) : Boolean
     fun executeQuery(query: String): List<Map<String, Any?>>

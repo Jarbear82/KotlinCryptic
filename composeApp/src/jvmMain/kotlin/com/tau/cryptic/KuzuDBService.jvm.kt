@@ -145,6 +145,75 @@ actual class KuzuDBService actual constructor() {
         }
     }
 
+    actual fun addEdge(tableName: String, fromNodeId: String, toNodeId: String, properties: Map<String, Any>): Boolean {
+        val props = properties.entries.joinToString(", ") {
+            "${it.key}: \$${it.key}"
+        }
+        val query = "MATCH (a), (b) WHERE a.id = \$fromNodeId AND b.id = \$toNodeId CREATE (a)-[r:$tableName {$props}]->(b)"
+
+        return try {
+            val params = properties.entries.associate { (key, value) ->
+                key to Value(value)
+            }.toMutableMap()
+            params["fromNodeId"] = Value(fromNodeId)
+            params["toNodeId"] = Value(toNodeId)
+
+            val preparedStatement = conn?.prepare(query)
+            conn?.execute(preparedStatement, params)
+            println("Successfully created edge in '$tableName'")
+            true
+        } catch (e: Exception) {
+            println("Failed to create edge in '$tableName': ${e.message}")
+            e.printStackTrace()
+            false
+        }
+    }
+
+    actual fun updateNode(tableName: String, nodeId: String, properties: Map<String, Any>): Boolean {
+        val props = properties.entries.joinToString(", ") {
+            "n.${it.key} = \$${it.key}"
+        }
+        val query = "MATCH (n:$tableName {id: \$nodeId}) SET $props"
+        return try {
+            val params = properties.entries.associate { (key, value) ->
+                key to Value(value)
+            }.toMutableMap()
+            params["nodeId"] = Value(nodeId)
+
+            val preparedStatement = conn?.prepare(query)
+            conn?.execute(preparedStatement, params)
+            println("Successfully updated node in '$tableName'")
+            true
+        } catch (e: Exception) {
+            println("Failed to update node in '$tableName': ${e.message}")
+            e.printStackTrace()
+            false
+        }
+    }
+
+    actual fun updateEdge(tableName: String, edgeId: String, properties: Map<String, Any>): Boolean {
+        val props = properties.entries.joinToString(", ") {
+            "r.${it.key} = \$${it.key}"
+        }
+        val query = "MATCH ()-[r:$tableName {id: \$edgeId}]-() SET $props"
+        return try {
+            val params = properties.entries.associate { (key, value) ->
+                key to Value(value)
+            }.toMutableMap()
+            params["edgeId"] = Value(edgeId)
+
+            val preparedStatement = conn?.prepare(query)
+            conn?.execute(preparedStatement, params)
+            println("Successfully updated edge in '$tableName'")
+            true
+        } catch (e: Exception) {
+            println("Failed to update edge in '$tableName': ${e.message}")
+            e.printStackTrace()
+            false
+        }
+    }
+
+
     /**
      * Deletes a node using a prepared statement to safely handle the node ID.
      */
