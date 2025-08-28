@@ -8,7 +8,7 @@ import com.kuzudb.*
 import java.nio.file.Files
 import java.nio.file.Paths
 import com.tau.cryptic.pages.*
-import java.io.File
+import java.math.BigInteger
 
 actual class KuzuDBService actual constructor() {
     private var db: Database? = null
@@ -189,74 +189,71 @@ actual class KuzuDBService actual constructor() {
     }
 
     private fun convertKuzuValueToJavaType(kuzuValue: Value): Any? {
-        return when (kuzuValue.dataType.id) {
+        if (kuzuValue.isNull) {
+            return null
+        }
+        return when (val typeId = kuzuValue.dataType.id) {
             KuzuTypeId.NODE -> {
-                val nodeValue = kuzuValue.getValue<Map<String, Value>>()
-                val properties = nodeValue["properties"]?.getValue<Map<String, Value>>()
-                val label = nodeValue["label"]?.getValue<String>()
-                val id = nodeValue["id"]?.getValue<String>()
-
-                val propertyMap = properties?.mapValues { convertKuzuValueToJavaType(it.value) }?.toMutableMap()
-                if (label != null) {
-                    propertyMap?.put("label", label)
-                }
-                if (id != null) {
-                    propertyMap?.put("id", id)
+                val propertyMap = mutableMapOf<String, Any?>()
+                propertyMap["id"] = ValueNodeUtil.getID(kuzuValue).toString()
+                propertyMap["label"] = ValueNodeUtil.getLabelName(kuzuValue)
+                for (i in 0 until ValueNodeUtil.getPropertySize(kuzuValue)) {
+                    val name = ValueNodeUtil.getPropertyNameAt(kuzuValue, i)
+                    val value = ValueNodeUtil.getPropertyValueAt(kuzuValue, i)
+                    propertyMap[name] = convertKuzuValueToJavaType(value)
                 }
                 propertyMap
             }
             KuzuTypeId.REL -> {
-                val relValue = kuzuValue.getValue<Map<String, Value>>()
-                val properties = relValue["properties"]?.getValue<Map<String, Value>>()
-                val label = relValue["label"]?.getValue<String>()
-                val src = relValue["src"]?.getValue<String>()
-                val dst = relValue["dst"]?.getValue<String>()
+                val propertyMap = mutableMapOf<String, Any?>()
+                propertyMap["id"] = ValueRelUtil.getID(kuzuValue).toString()
+                propertyMap["label"] = ValueRelUtil.getLabelName(kuzuValue)
+                propertyMap["src"] = ValueRelUtil.getSrcID(kuzuValue).toString()
+                propertyMap["dst"] = ValueRelUtil.getDstID(kuzuValue).toString()
+                for (i in 0 until ValueRelUtil.getPropertySize(kuzuValue)) {
+                    val name = ValueRelUtil.getPropertyNameAt(kuzuValue, i)
+                    val value = ValueRelUtil.getPropertyValueAt(kuzuValue, i)
+                    propertyMap[name] = convertKuzuValueToJavaType(value)
 
-                val propertyMap = properties?.mapValues { convertKuzuValueToJavaType(it.value) }?.toMutableMap()
-                if (label != null) {
-                    propertyMap?.put("label", label)
                 }
-                if (src != null) {
-                    propertyMap?.put("src", src)
-                }
-                if (dst != null) {
-                    propertyMap?.put("dst", dst)
-                }
-
                 propertyMap
             }
-            KuzuTypeId.INT8 -> kuzuValue.getValue<Byte>()
-            KuzuTypeId.INT16 -> kuzuValue.getValue<Short>()
-            KuzuTypeId.INT32 -> kuzuValue.getValue<Int>()
-            KuzuTypeId.INT64 -> kuzuValue.getValue<Long>()
-            KuzuTypeId.FLOAT -> kuzuValue.getValue<Float>()
-            KuzuTypeId.DOUBLE -> kuzuValue.getValue<Double>()
+            KuzuTypeId.RECURSIVE_REL -> {
+                val recursiveRelMap = mutableMapOf<String, Any?>()
+                val nodes = ValueRecursiveRelUtil.getNodeList(kuzuValue)
+                val rels = ValueRecursiveRelUtil.getRelList(kuzuValue)
+                recursiveRelMap["nodes"] = convertKuzuValueToJavaType(nodes)
+                recursiveRelMap["rels"] = convertKuzuValueToJavaType(rels)
+                recursiveRelMap
+            }
             KuzuTypeId.BOOL -> kuzuValue.getValue<Boolean>()
+            KuzuTypeId.INT64 -> kuzuValue.getValue<Long>()
+            KuzuTypeId.INT32 -> kuzuValue.getValue<Int>()
+            KuzuTypeId.INT16 -> kuzuValue.getValue<Short>()
+            KuzuTypeId.INT8 -> kuzuValue.getValue<Byte>()
+            KuzuTypeId.UINT64 -> kuzuValue.getValue<ULong>()
+            KuzuTypeId.UINT32 -> kuzuValue.getValue<UInt>()
+            KuzuTypeId.UINT16 -> kuzuValue.getValue<UShort>()
+            KuzuTypeId.UINT8 -> kuzuValue.getValue<UByte>()
+            KuzuTypeId.INT128 -> kuzuValue.getValue<BigInteger>().toString()
+            KuzuTypeId.DOUBLE -> kuzuValue.getValue<Double>()
+            KuzuTypeId.FLOAT -> kuzuValue.getValue<Float>()
+            KuzuTypeId.DATE, KuzuTypeId.TIMESTAMP, KuzuTypeId.TIMESTAMP_MS, KuzuTypeId.TIMESTAMP_NS, KuzuTypeId.TIMESTAMP_SEC, KuzuTypeId.TIMESTAMP_TZ, KuzuTypeId.INTERVAL -> TODO()
             KuzuTypeId.STRING -> kuzuValue.getValue<String>()
-            KuzuTypeId.DATE -> kuzuValue.getValue<String>()
-            KuzuTypeId.TIMESTAMP -> kuzuValue.getValue<String>()
-            KuzuTypeId.INTERVAL -> kuzuValue.getValue<String>()
-            KuzuTypeId.LIST -> {
-                val listValues = kuzuValue.getValue<List<Value>>()
-                listValues.map { element -> convertKuzuValueToJavaType(element) }
-            }
-            KuzuTypeId.STRUCT -> {
-                val structMap = mutableMapOf<String, Any?>()
-                kuzuValue.getValue<Map<String, Value>>().forEach { (key, structValue) ->
-                    structMap[key] = convertKuzuValueToJavaType(structValue)
-                }
-                structMap
-            }
-            KuzuTypeId.MAP -> {
-                val mapValues = mutableMapOf<String, Any?>()
-                kuzuValue.getValue<Map<String, Value>>().forEach { (key, mapValue) ->
-                    mapValues[key] = convertKuzuValueToJavaType(mapValue)
-                }
-                mapValues
-            }
+            KuzuTypeId.ANY -> TODO()
+            KuzuTypeId.SERIAL -> TODO()
+            KuzuTypeId.DECIMAL -> TODO()
+            KuzuTypeId.INTERNAL_ID -> TODO()
+            KuzuTypeId.BLOB -> TODO()
+            KuzuTypeId.LIST -> TODO()
+            KuzuTypeId.ARRAY -> TODO()
+            KuzuTypeId.STRUCT -> TODO()
+            KuzuTypeId.MAP -> TODO()
+            KuzuTypeId.UNION -> TODO()
+            KuzuTypeId.UUID -> TODO()
             else -> {
-                println("Unhandled Kuzu data type in conversion: ${kuzuValue.dataType.id}")
-                null
+                println("Unhandled Kuzu data type in conversion: $typeId")
+                kuzuValue.toString()
             }
         }
     }
