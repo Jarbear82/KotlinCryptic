@@ -200,8 +200,7 @@ fun Graph(
                                 graphName = graph.name,
                                 primarySelected = primarySelected,
                                 secondarySelected = secondarySelected,
-                                nodes = noteGraph?.nodes ?: emptyList(),
-                                edges = noteGraph?.edges ?: emptyList(),
+                                noteGraph = noteGraph,
                                 onElementSelect = { element ->
                                     if (element is GraphNode && isCtrlPressed) {
                                         secondarySelected = if (secondarySelected?.id == element.id) null else element
@@ -264,8 +263,7 @@ private fun MetadataTab(
     graphName: String,
     primarySelected: GraphElement?,
     secondarySelected: GraphNode?,
-    nodes: List<GraphNode>,
-    edges: List<GraphEdge>,
+    noteGraph: NoteGraph?,
     onElementSelect: (GraphElement) -> Unit
 ) {
     LazyColumn(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -277,27 +275,29 @@ private fun MetadataTab(
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
         }
 
-        item {
-            Text("Node List", style = MaterialTheme.typography.titleLarge)
-        }
-        items(nodes, key = { it.id }) { node ->
-            SelectableListItem(
-                text = node.displayId,
-                isSelected = primarySelected?.id == node.id || secondarySelected?.id == node.id,
-                onClick = { onElementSelect(node) }
-            )
-        }
+        if (noteGraph != null) {
+            item {
+                Text("Node List", style = MaterialTheme.typography.titleLarge)
+            }
+            items(noteGraph.nodes, key = { it.id }) { node ->
+                SelectableListItem(
+                    text = node.displayId,
+                    isSelected = primarySelected?.id == node.id || secondarySelected?.id == node.id,
+                    onClick = { onElementSelect(node) }
+                )
+            }
 
-        item {
-            Spacer(Modifier.height(16.dp))
-            Text("Edge List", style = MaterialTheme.typography.titleLarge)
-        }
-        items(edges, key = { it.id }) { edge ->
-            SelectableListItem(
-                text = edge.displayId,
-                isSelected = primarySelected?.id == edge.id,
-                onClick = { onElementSelect(edge) }
-            )
+            item {
+                Spacer(Modifier.height(16.dp))
+                Text("Edge List", style = MaterialTheme.typography.titleLarge)
+            }
+            items(noteGraph.edges, key = { it.id }) { edge ->
+                SelectableListItem(
+                    text = edge.displayId,
+                    isSelected = primarySelected?.id == edge.id,
+                    onClick = { onElementSelect(edge) }
+                )
+            }
         }
     }
 }

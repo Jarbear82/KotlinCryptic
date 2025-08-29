@@ -30,6 +30,6 @@ class DefaultAppContainer : AppContainer {
     }
 
     override val queryViewModel: QueryViewModel by lazy {
-        QueryViewModel(kuzuDBService)
+        QueryViewModel(graphRepository)
     }
 }
