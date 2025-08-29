@@ -136,7 +136,8 @@ actual class KuzuDBService actual constructor() {
             // Prepare the statement.
             val preparedStatement = conn?.prepare(query)
             // Execute with the parameters.
-            conn?.execute(preparedStatement, params)
+            val result = conn?.execute(preparedStatement, params)
+            println("Result: $result")
             println("Successfully created node in '$tableName'")
             true
         } catch (e: Exception) {
@@ -160,7 +161,8 @@ actual class KuzuDBService actual constructor() {
             params["toNodeId"] = Value(toNodeId)
 
             val preparedStatement = conn?.prepare(query)
-            conn?.execute(preparedStatement, params)
+            val result = conn?.execute(preparedStatement, params)
+            println("Result: $result")
             println("Successfully created edge in '$tableName'")
             true
         } catch (e: Exception) {
@@ -182,7 +184,8 @@ actual class KuzuDBService actual constructor() {
             params["nodeId"] = Value(nodeId)
 
             val preparedStatement = conn?.prepare(query)
-            conn?.execute(preparedStatement, params)
+            val result = conn?.execute(preparedStatement, params)
+            println("Result: $result")
             println("Successfully updated node in '$tableName'")
             true
         } catch (e: Exception) {
@@ -204,7 +207,8 @@ actual class KuzuDBService actual constructor() {
             params["edgeId"] = Value(edgeId)
 
             val preparedStatement = conn?.prepare(query)
-            conn?.execute(preparedStatement, params)
+            val result = conn?.execute(preparedStatement, params)
+            println("Result: $result")
             println("Successfully updated edge in '$tableName'")
             true
         } catch (e: Exception) {
@@ -227,7 +231,8 @@ actual class KuzuDBService actual constructor() {
             // Create the parameter map. The key "nodeId" matches "$nodeId" in the query.
             val params = mapOf("nodeId" to Value(nodeId))
             // Execute with the parameters.
-            conn?.execute(preparedStatement, params)
+            val result = conn?.execute(preparedStatement, params)
+            println("Result: $result")
             println("Successfully deleted node from '$tableName'")
             true
         } catch (e: Exception) {
