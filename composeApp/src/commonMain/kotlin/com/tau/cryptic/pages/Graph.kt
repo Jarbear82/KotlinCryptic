@@ -392,7 +392,7 @@ private fun NewTab(
         // 1. Select Node or Edge via Dropdown
         item {
             var expanded by remember { mutableStateOf(false) }
-            val creationTypes = CreationType.entries
+            val creationTypes = CreationType.values()
 
             ExposedDropdownMenuBox(
                 expanded = expanded,
@@ -705,7 +705,7 @@ private fun PropertyInput(
     onValueChanged: (Any?) -> Unit
 ) {
     when (propertyDef.type) {
-        PropertyType.BOOLEAN -> {
+        PropertyType.BOOL -> {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
@@ -723,7 +723,7 @@ private fun PropertyInput(
                 )
             }
         }
-        PropertyType.NUMBER -> {
+        PropertyType.INT64 -> {
             OutlinedTextField(
                 value = state.value?.toString() ?: "",
                 onValueChange = {
@@ -737,6 +737,34 @@ private fun PropertyInput(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
         }
+        PropertyType.DATE -> {
+            OutlinedTextField(
+                value = state.value?.toString() ?: "",
+                onValueChange = {
+                    // Regex for YYYY-MM-DD
+                    if (it.matches(Regex("^\\d{4}-\\d{2}-\\d{2}$"))) {
+                        state.value = it
+                        onValueChanged(it)
+                    }
+                },
+                label = { Text("${propertyDef.key} (YYYY-MM-DD)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+        PropertyType.TIMESTAMP -> {
+            OutlinedTextField(
+                value = state.value?.toString() ?: "",
+                onValueChange = {
+                    // Regex for basic timestamp validation
+                    if (it.matches(Regex("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"))) {
+                        state.value = it
+                        onValueChanged(it)
+                    }
+                },
+                label = { Text("${propertyDef.key} (YYYY-MM-DDTHH:MM:SS)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
         else -> { // TEXT, LONG_TEXT, IMAGE
             OutlinedTextField(
                 value = state.value?.toString() ?: "",
@@ -746,8 +774,6 @@ private fun PropertyInput(
                 },
                 label = { Text(propertyDef.key) },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = propertyDef.type != PropertyType.LONG_TEXT,
-                maxLines = if (propertyDef.type == PropertyType.LONG_TEXT) 5 else 1
             )
         }
     }

@@ -255,10 +255,12 @@ actual class KuzuDBService actual constructor() {
         return try {
             println("Executing query: $query")
             if (params.isEmpty()) {
-                conn?.query(query)
+                val result = conn?.query(query)
+                print("Result: $result")
             } else {
                 val preparedStatement = conn?.prepare(query)
-                conn?.execute(preparedStatement, params)
+                val result = conn?.execute(preparedStatement, params)
+                 print("Result: $result")
             }
             println("Successfully executed query: $description")
             true
@@ -279,6 +281,7 @@ actual class KuzuDBService actual constructor() {
                 val preparedStatement = conn?.prepare(query)
                 conn?.execute(preparedStatement, params)
             }
+            print("Result: $queryResult.toString()")
             queryResult?.let {
                 while (it.hasNext()) {
                     val row = it.getNext()
@@ -372,12 +375,19 @@ actual class KuzuDBService actual constructor() {
 
     private fun mapPropertyType(type: PropertyType): String {
         return when (type) {
-            PropertyType.TEXT, PropertyType.LONG_TEXT, PropertyType.IMAGE -> "STRING"
-            PropertyType.NUMBER -> "INT64"
-            PropertyType.BOOLEAN -> "BOOLEAN"
+            PropertyType.STRING -> "STRING"
+            PropertyType.INT64 -> "INT64"
+            PropertyType.DOUBLE -> "DOUBLE"
+            PropertyType.BOOL -> "BOOL"
             PropertyType.DATE -> "DATE"
             PropertyType.TIMESTAMP -> "TIMESTAMP"
-            PropertyType.LIST, PropertyType.MAP, PropertyType.VECTOR, PropertyType.STRUCT -> "STRING"
+            PropertyType.INTERVAL -> "INTERVAL"
+            PropertyType.INTERNAL_ID -> "INTERNAL_ID"
+            PropertyType.BLOB -> "BLOB"
+            PropertyType.UUID -> "UUID"
+            PropertyType.LIST -> "LIST"
+            PropertyType.MAP -> "MAP"
+            PropertyType.STRUCT -> "STRUCT"
         }
     }
 }

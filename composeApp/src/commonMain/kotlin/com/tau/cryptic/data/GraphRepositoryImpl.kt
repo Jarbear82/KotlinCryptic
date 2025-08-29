@@ -60,12 +60,20 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
 
     private fun mapDbTypetoPropertyType(dbType: String): PropertyType {
         return when (dbType.uppercase()) {
-            "STRING" -> PropertyType.TEXT
-            "INT64" -> PropertyType.NUMBER
-            "BOOLEAN" -> PropertyType.BOOLEAN
+            "STRING" -> PropertyType.STRING
+            "INT64" -> PropertyType.INT64
+            "DOUBLE" -> PropertyType.DOUBLE
+            "BOOL" -> PropertyType.BOOL
             "DATE" -> PropertyType.DATE
             "TIMESTAMP" -> PropertyType.TIMESTAMP
-            else -> PropertyType.TEXT // Default to TEXT for unknown types
+            "INTERVAL" -> PropertyType.INTERVAL
+            "INTERNAL_ID" -> PropertyType.INTERNAL_ID
+            "BLOB" -> PropertyType.BLOB
+            "UUID" -> PropertyType.UUID
+            "LIST" -> PropertyType.LIST
+            "MAP" -> PropertyType.MAP
+            "STRUCT" -> PropertyType.STRUCT
+            else -> PropertyType.STRING // Default to STRING for unknown types
         }
     }
 

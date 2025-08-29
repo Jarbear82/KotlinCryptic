@@ -15,6 +15,7 @@ class QueryViewModel(private val graphRepository: GraphRepository) : ViewModel()
     fun executeQuery(query: String) {
         viewModelScope.launch {
             _queryResult.value = graphRepository.executeQuery(query)
+            print(_queryResult.toString())
         }
     }
 }

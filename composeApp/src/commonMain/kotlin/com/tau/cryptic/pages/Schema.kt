@@ -25,17 +25,19 @@ import com.tau.cryptic.ui.viewmodel.SchemaViewModel
  * Defines the types for schema properties, now with more advanced types.
  */
 enum class PropertyType(val displayName: String) {
-    TEXT("Text"),
-    NUMBER("Number"),
-    BOOLEAN("Boolean"),
-    LONG_TEXT("Long Text"),
-    IMAGE("Image"),
-    DATE("Date"),
-    TIMESTAMP("Timestamp"),
-    LIST("List"),
-    MAP("Map"),
-    VECTOR("Vector"),
-    STRUCT("Struct")
+    STRING("STRING"),
+    INT64("INT64"),
+    DOUBLE("DOUBLE"),
+    BOOL("BOOL"),
+    DATE("DATE"),
+    TIMESTAMP("TIMESTAMP"),
+    INTERVAL("INTERVAL"),
+    INTERNAL_ID("INTERNAL_ID"),
+    BLOB("BLOB"),
+    UUID("UUID"),
+    LIST("LIST"),
+    MAP("MAP"),
+    STRUCT("STRUCT")
 }
 
 /**
@@ -43,17 +45,20 @@ enum class PropertyType(val displayName: String) {
  */
 val PropertyType.defaultValue: Any?
     get() = when (this) {
-        PropertyType.TEXT, PropertyType.LONG_TEXT, PropertyType.IMAGE -> ""
-        PropertyType.NUMBER -> 0L // Defaulting to Long for INT64
-        PropertyType.BOOLEAN -> false
-        PropertyType.DATE -> "2023-01-01" // KuzuDB expects date as string
+        PropertyType.STRING -> ""
+        PropertyType.INT64 -> 0L
+        PropertyType.DOUBLE -> 0.0
+        PropertyType.BOOL -> false
+        PropertyType.DATE -> "2023-01-01"
         PropertyType.TIMESTAMP -> System.currentTimeMillis()
+        PropertyType.INTERVAL -> "P1Y2M3DT4H5M6S"
+        PropertyType.INTERNAL_ID -> ""
+        PropertyType.BLOB -> ""
+        PropertyType.UUID -> UUID.randomUUID().toString()
         PropertyType.LIST -> "[]"
         PropertyType.MAP -> "{}"
-        PropertyType.VECTOR -> "[]"
         PropertyType.STRUCT -> "{}"
     }
-
 /**
  * Represents a single property within a schema.
  * @param id A unique identifier for UI stability.
@@ -166,7 +171,7 @@ fun Schema(
                         schemaViewModel.onNodeSchemaRemove(it)
                     },
                     onCreate = { typeName, properties ->
-                        val finalProperties = mutableListOf(PropertyDefinition(key = "name", type = PropertyType.TEXT))
+                        val finalProperties = mutableListOf(PropertyDefinition(key = "name", type = PropertyType.STRING))
                         finalProperties.addAll(properties)
                         // Create a new NodeSchema with a unique ID
                         val newSchema = NodeSchema(
@@ -300,7 +305,7 @@ fun SchemaDetailView(schema: SchemaDefinition?, onUpdate: (SchemaDefinition) -> 
 
     // State for the new property form
     var newPropKey by remember { mutableStateOf("") }
-    var newPropType by remember { mutableStateOf(PropertyType.TEXT) }
+    var newPropType by remember { mutableStateOf(PropertyType.STRING) }
 
 
     // Function to handle updates and propagate them
@@ -450,7 +455,7 @@ fun SchemaDetailView(schema: SchemaDefinition?, onUpdate: (SchemaDefinition) -> 
                             triggerUpdate()
                             // Reset form
                             newPropKey = ""
-                            newPropType = PropertyType.TEXT
+                            newPropType = PropertyType.STRING
                         }
                     },
                     enabled = newPropKey.isNotBlank()
@@ -518,7 +523,7 @@ private fun CreateSchemaForm(
     var typeName by remember { mutableStateOf("") }
     val properties = remember { mutableStateListOf<PropertyDefinition>() }
     var newPropKey by remember { mutableStateOf("") }
-    var newPropType by remember { mutableStateOf(PropertyType.TEXT) }
+    var newPropType by remember { mutableStateOf(PropertyType.STRING) }
 
     Column(
         modifier = Modifier
@@ -599,7 +604,7 @@ private fun CreateEdgeSchemaForm(
     var typeName by remember { mutableStateOf("") }
     val properties = remember { mutableStateListOf<PropertyDefinition>() }
     var newPropKey by remember { mutableStateOf("") }
-    var newPropType by remember { mutableStateOf(PropertyType.TEXT) }
+    var newPropType by remember { mutableStateOf(PropertyType.STRING) }
     var fromNodeSchema by remember { mutableStateOf<NodeSchema?>(null) }
     var toNodeSchema by remember { mutableStateOf<NodeSchema?>(null) }
 
