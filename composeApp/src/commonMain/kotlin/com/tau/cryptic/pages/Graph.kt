@@ -392,7 +392,7 @@ private fun NewTab(
         // 1. Select Node or Edge via Dropdown
         item {
             var expanded by remember { mutableStateOf(false) }
-            val creationTypes = CreationType.values()
+            val creationTypes = CreationType.entries
 
             ExposedDropdownMenuBox(
                 expanded = expanded,
@@ -534,29 +534,50 @@ private fun QueryTab(queryViewModel: QueryViewModel) {
     var query by remember { mutableStateOf("MATCH (n) RETURN n") }
     val queryResult by queryViewModel.queryResult.collectAsState()
 
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text("Cypher Query", style = MaterialTheme.typography.headlineSmall)
-        Spacer(Modifier.height(16.dp))
-        OutlinedTextField(
-            value = query,
-            onValueChange = { query = it },
-            label = { Text("Enter your Cypher-like query") },
-            modifier = Modifier.fillMaxWidth().weight(1f),
-            maxLines = 10
-        )
-        Spacer(Modifier.height(8.dp))
-        Button(onClick = {
-            queryViewModel.executeQuery(query)
-        }) {
-            Text("Execute")
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp) // Handles spacing between items
+    ) {
+        // --- Header ---
+        item {
+            Text("Cypher Query", style = MaterialTheme.typography.headlineSmall)
         }
-        Spacer(Modifier.height(16.dp))
-        Text("Result", style = MaterialTheme.typography.titleMedium)
-        Card(modifier = Modifier.fillMaxWidth().weight(1f)) {
-            LazyColumn(modifier = Modifier.padding(16.dp)) {
-                items(queryResult) { row ->
-                    Text(row.toString())
-                }
+
+        // --- Query Input Field ---
+        item {
+            OutlinedTextField(
+                value = query,
+                onValueChange = { query = it },
+                label = { Text("Enter your Cypher-like query") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp), // Use a fixed height instead of weight
+                maxLines = 10
+            )
+        }
+
+        // --- Execute Button ---
+        item {
+            Button(onClick = {
+                queryViewModel.executeQuery(query)
+            }) {
+                Text("Execute")
+            }
+        }
+
+        // --- Result Header ---
+        item {
+            Text("Result", style = MaterialTheme.typography.titleMedium)
+        }
+
+        // --- Result Items ---
+        // This is much more efficient than a nested LazyColumn.
+        items(queryResult) { row ->
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = row.toString(),
+                    modifier = Modifier.padding(16.dp)
+                )
             }
         }
     }
