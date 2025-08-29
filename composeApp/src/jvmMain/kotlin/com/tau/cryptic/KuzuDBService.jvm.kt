@@ -281,7 +281,7 @@ actual class KuzuDBService actual constructor() {
                 val preparedStatement = conn?.prepare(query)
                 conn?.execute(preparedStatement, params)
             }
-            print("Result: $queryResult.toString()")
+            print("Result: $queryResult")
             queryResult?.let {
                 while (it.hasNext()) {
                     val row = it.getNext()
