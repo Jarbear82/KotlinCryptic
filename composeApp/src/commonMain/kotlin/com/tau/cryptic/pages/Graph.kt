@@ -34,6 +34,7 @@ import com.tau.cryptic.NoteGraph
 import com.tau.cryptic.components.Identifiable
 import com.tau.cryptic.ui.viewmodel.GraphViewModel
 import com.tau.cryptic.ui.viewmodel.QueryViewModel
+import com.tau.cryptic.components.ResultContainer
 
 
 //region Data Models
@@ -553,10 +554,8 @@ private fun QueryTab(queryViewModel: QueryViewModel) {
         Spacer(Modifier.height(16.dp))
         Text("Result", style = MaterialTheme.typography.titleMedium)
         Card(modifier = Modifier.fillMaxWidth().weight(1f)) {
-            LazyColumn(modifier = Modifier.padding(16.dp)) {
-                items(queryResult) { row ->
-                    Text(row.toString())
-                }
+            queryResult?.let {
+                ResultContainer(it)
             }
         }
     }

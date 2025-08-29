@@ -1,5 +1,6 @@
 package com.tau.cryptic
 
+import com.tau.cryptic.data.QueryResult
 import com.tau.cryptic.pages.EdgeSchema
 import com.tau.cryptic.pages.NodeSchema
 
@@ -24,5 +25,5 @@ expect class KuzuDBService() {
     fun updateEdge(tableName: String, edgeId: String, properties: Map<String, Any>): Boolean
     fun deleteNode(tableName: String, nodeId: String): Boolean
     fun dropTable(schemaTypeName: String) : Boolean
-    fun executeQuery(query: String): List<Map<String, Any?>>
+    fun executeQuery(query: String): QueryResult
 }

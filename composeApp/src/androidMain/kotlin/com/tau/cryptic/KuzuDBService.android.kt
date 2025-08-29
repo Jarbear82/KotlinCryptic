@@ -9,6 +9,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import com.tau.cryptic.pages.*
 import java.math.BigInteger
+import com.tau.cryptic.data.QueryResult
 
 actual class KuzuDBService actual constructor() {
     private var db: Database? = null
@@ -57,37 +58,37 @@ actual class KuzuDBService actual constructor() {
 
     actual fun getNodeTables(): List<Map<String, Any?>> {
         val query = "CALL SHOW_TABLES() WHERE type = 'NODE' RETURN name"
-        return executeQueryAndParseResults(query, "get node tables")
+        return executeQuery(query).rows
     }
 
     actual fun getEdgeTables(): List<Map<String, Any?>> {
         val query = "CALL SHOW_TABLES() WHERE type = 'REL' RETURN name"
-        return executeQueryAndParseResults(query, "get edge tables")
+        return executeQuery(query).rows
     }
 
     actual fun getTableSchema(tableName: String): List<Map<String, Any?>> {
         val query = "CALL TABLE_INFO('$tableName') RETURN name, type"
-        return executeQueryAndParseResults(query, "get table schema for '$tableName'")
+        return executeQuery(query).rows
     }
 
     actual fun getAllNodes(): List<Map<String, Any?>> {
         val query = "MATCH (n) RETURN n"
-        return executeQueryAndParseResults(query, "get all nodes")
+        return executeQuery(query).rows
     }
 
     actual fun getAllEdges(): List<Map<String, Any?>> {
         val query = "MATCH ()-[r]-() RETURN r"
-        return executeQueryAndParseResults(query, "get all edges")
+        return executeQuery(query).rows
     }
 
     actual fun getNode(tableName: String, nodeId: String): Map<String, Any?>? {
         val query = "MATCH (n:$tableName {id: '$nodeId'}) RETURN n"
-        return executeQueryAndParseResults(query, "get node from '$tableName'").firstOrNull()
+        return executeQuery(query).rows.firstOrNull()
     }
 
     actual fun getEdge(tableName: String, edgeId: String): Map<String, Any?>? {
         val query = "MATCH ()-[r:$tableName {id: '$edgeId'}]-() RETURN r"
-        return executeQueryAndParseResults(query, "get edge from '$tableName'").firstOrNull()
+        return executeQuery(query).rows.firstOrNull()
     }
 
     actual fun deleteEdge(tableName: String, edgeId: String): Boolean {
@@ -97,12 +98,12 @@ actual class KuzuDBService actual constructor() {
 
     actual fun getNodesByType(tableName: String): List<Map<String, Any?>> {
         val query = "MATCH (n:$tableName) RETURN n"
-        return executeQueryAndParseResults(query, "get all nodes of type $tableName")
+        return executeQuery(query).rows
     }
 
     actual fun getEdgesByType(tableName: String): List<Map<String, Any?>> {
         val query = "MATCH ()-[r:$tableName]-() RETURN r"
-        return executeQueryAndParseResults(query, "get all edges of type $tableName")
+        return executeQuery(query).rows
     }
 
     actual fun createNode(tableName: String, properties: Map<String, Any>): Boolean {
@@ -146,7 +147,7 @@ actual class KuzuDBService actual constructor() {
         return executeQuery(query, "drop table '$schemaTypeName'")
     }
 
-    actual fun executeQuery(query: String): List<Map<String, Any?>> {
+    actual fun executeQuery(query: String): QueryResult {
         return executeQueryAndParseResults(query, "custom query")
     }
 
@@ -163,12 +164,16 @@ actual class KuzuDBService actual constructor() {
         }
     }
 
-    private fun executeQueryAndParseResults(query: String, description: String): List<Map<String, Any?>> {
+    private fun executeQueryAndParseResults(query: String, description: String): QueryResult {
         val results = mutableListOf<Map<String, Any?>>()
+        val columnTypes = mutableMapOf<String, String>()
         try {
             println("Executing query: $query")
             val queryResult = conn?.query(query)
             queryResult?.let {
+                for (i in 0 until it.numColumns) {
+                    columnTypes[it.getColumnName(i)] = it.getColumnType(i).toString()
+                }
                 while (it.hasNext()) {
                     val row = it.getNext()
                     val rowMap = mutableMapOf<String, Any?>()
@@ -185,7 +190,7 @@ actual class KuzuDBService actual constructor() {
             println("Failed to execute query '$description': ${e.message}")
             e.printStackTrace()
         }
-        return results
+        return QueryResult(results, columnTypes)
     }
 
     private fun convertKuzuValueToJavaType(kuzuValue: Value): Any? {

@@ -217,7 +217,7 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
         loadGraphEdges()
     }
 
-    override fun executeQuery(query: String): List<Map<String, Any?>> {
+    override fun executeQuery(query: String): QueryResult {
         return kuzuDBService.executeQuery(query)
     }
 }
