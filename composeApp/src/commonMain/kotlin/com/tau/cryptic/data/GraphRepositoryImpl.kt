@@ -103,14 +103,22 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
     }
 
     override fun loadGraphNodes() {
+        val graph = _selectedNoteGraph.value ?: return
         val allNodes = kuzuDBService.getAllNodes()
         val graphNodes = allNodes.mapNotNull { nodeData ->
             val id = nodeData["id"] as? String
             val typeName = nodeData["label"] as? String
             if (id != null && typeName != null) {
-                val propertyInstances = nodeData.map { (key, value) ->
+                val schema = graph.nodeSchemas.find { it.typeName == typeName }
+                val schemaPropertyKeys = schema?.properties?.map { it.key }?.toSet() ?: emptySet()
+
+                val propertyInstances = nodeData.filter { (key, _) ->
+                    // Only include properties defined in the schema for this node type, plus the metadata 'label'.
+                    key in schemaPropertyKeys || key == "label"
+                }.map { (key, value) ->
                     PropertyInstance(key, value)
                 }.toMutableList()
+
                 GraphNode(id = id, typeName = typeName, properties = propertyInstances)
             } else {
                 null
@@ -120,6 +128,7 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
     }
 
     override fun loadGraphEdges() {
+        val graph = _selectedNoteGraph.value ?: return
         val allEdges = kuzuDBService.getAllEdges()
         val graphEdges = allEdges.mapNotNull { edgeData ->
             val id = edgeData["id"] as? String
@@ -127,7 +136,12 @@ class GraphRepositoryImpl(private val kuzuDBService: KuzuDBService) : GraphRepos
             val src = edgeData["src"] as? String
             val dst = edgeData["dst"] as? String
             if (id != null && typeName != null && src != null && dst != null) {
-                val propertyInstances = edgeData.map { (key, value) ->
+                val schema = graph.edgeSchemas.find { it.typeName == typeName }
+                val schemaPropertyKeys = schema?.properties?.map { it.key }?.toSet() ?: emptySet()
+
+                val propertyInstances = edgeData.filter { (key, _) ->
+                    key in schemaPropertyKeys || key in setOf("id", "label", "src", "dst")
+                }.map { (key, value) ->
                     PropertyInstance(key, value)
                 }.toMutableList()
                 GraphEdge(id = id, typeName = typeName, sourceNodeId = src, targetNodeId = dst, properties = propertyInstances)

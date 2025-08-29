@@ -486,7 +486,16 @@ private fun NewTab(
 
                         when (val schema = selectedSchema) {
                             is NodeSchema -> {
-                                onCreateNode(GraphNode(typeName = schema.typeName, properties = propertyInstances))
+                                // Explicitly generate and set the unique ID for the new node.
+                                val newId = Uuid.random().toString()
+                                // Find if 'id' property instance exists and update it, or add it if not.
+                                val idIndex = propertyInstances.indexOfFirst { it.key == "id" }
+                                if (idIndex != -1) {
+                                    propertyInstances[idIndex] = propertyInstances[idIndex].copy(value = newId)
+                                } else {
+                                    propertyInstances.add(PropertyInstance("id", newId))
+                                }
+                                onCreateNode(GraphNode(id = newId, typeName = schema.typeName, properties = propertyInstances))
                             }
                             is EdgeSchema -> {
                                 if (sourceNode != null && targetNode != null) {
